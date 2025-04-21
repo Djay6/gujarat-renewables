@@ -3,19 +3,13 @@ import { MetadataRoute } from 'next';
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://gujaratrenewables.com';
   
-  // Common pages for both languages
+  // Common pages 
   const commonRoutes = [
     {
       url: baseUrl,
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
       priority: 1.0,
-    },
-    {
-      url: `${baseUrl}/en`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.9,
     }
   ];
   
@@ -33,20 +27,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     'amreli'
   ];
   
-  const districtRoutes = districts.flatMap(district => [
-    {
-      url: `${baseUrl}/districts/${district}`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/en/districts/${district}`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.8,
-    }
-  ]);
+  const districtRoutes = districts.map(district => ({
+    url: `${baseUrl}/districts/${district}`,
+    lastModified: new Date(),
+    changeFrequency: 'monthly' as const,
+    priority: 0.8,
+  }));
   
   // Generate service pages
   const serviceRoutes = [
@@ -61,18 +47,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: 'monthly' as const,
       priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/en/services/land-leasing`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/en/services/land-selling`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.7,
     }
   ];
   
@@ -80,12 +54,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const blogRoutes = [
     {
       url: `${baseUrl}/blog`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}/en/blog`,
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.6,

@@ -6,7 +6,6 @@ type GenerateMetadataProps = {
   keywords?: string;
   locale?: 'gu_IN' | 'en_US';
   pathname?: string;
-  alternateLocales?: Record<string, string>;
   openGraphImage?: string;
   noIndex?: boolean;
   metadataBaseUrl?: string;
@@ -21,7 +20,6 @@ export function generateMetadata({
   keywords = 'solar land Gujarat, solar land aggregator, solar farm land Gujarat, sell land for solar Gujarat, lease land for solar projects, ગુજરાતમાં સોલાર પ્રોજેક્ટ્સ, solar land investment Gujarat',
   locale = 'gu_IN',
   pathname = '',
-  alternateLocales = { 'en-US': '/en', 'gu': '/' },
   openGraphImage = '/og-image.svg',
   noIndex = false,
   metadataBaseUrl = 'https://gujaratrenewables.com',
@@ -36,7 +34,6 @@ export function generateMetadata({
     keywords,
     alternates: {
       canonical: url,
-      languages: alternateLocales,
     },
     robots: {
       index: !noIndex,

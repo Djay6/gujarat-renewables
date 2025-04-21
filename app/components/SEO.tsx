@@ -52,11 +52,6 @@ export default function SEO({
       
       {/* Canonical URL */}
       <link rel="canonical" href={canonicalUrl} />
-      
-      {/* Hreflang tags for language alternates */}
-      <link rel="alternate" hrefLang="en" href={`https://gujaratrenewables.com/en${pathname}`} />
-      <link rel="alternate" hrefLang="gu" href={`https://gujaratrenewables.com${pathname}`} />
-      <link rel="alternate" hrefLang="x-default" href={`https://gujaratrenewables.com${pathname}`} />
     </Head>
   );
 } 
