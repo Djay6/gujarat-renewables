@@ -25,6 +25,8 @@ export type TranslationSchema = {
       requiredFields: string;
       selectDistrict: string;
       selectTaluka: string;
+      submitDetails: string;
+      forBoth: string;
     };
     landowner: {
       title: string;
@@ -134,6 +136,8 @@ export const translations: Record<Language, TranslationSchema> = {
         requiredFields: "જરૂરી ફીલ્ડ્સ",
         selectDistrict: "જિલ્લો પસંદ કરો",
         selectTaluka: "તાલુકો પસંદ કરો",
+        submitDetails: "તમારી વિગતો સબમિટ કરો",
+        forBoth: "અમે તમારો સંપર્ક કરીશું.",
       },
       landowner: {
         title: "જમીન માલિક માહિતી",
@@ -241,6 +245,8 @@ export const translations: Record<Language, TranslationSchema> = {
         requiredFields: "Required Fields",
         selectDistrict: "Select District",
         selectTaluka: "Select Taluka",
+        submitDetails: "Submit Your Details",
+        forBoth: "We will get in touch with you.",
       },
       landowner: {
         title: "Land Owner Information",
