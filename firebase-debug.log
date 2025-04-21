@@ -1,0 +1,30 @@
+[debug] [2025-04-19T06:35:42.870Z] ----------------------------------------------------------------------
+[debug] [2025-04-19T06:35:42.872Z] Command:       /home/aveosoft/.nvm/versions/node/v20.18.0/bin/node /home/aveosoft/.nvm/versions/node/v20.18.0/bin/firebase init
+[debug] [2025-04-19T06:35:42.873Z] CLI Version:   14.0.1
+[debug] [2025-04-19T06:35:42.873Z] Platform:      linux
+[debug] [2025-04-19T06:35:42.873Z] Node Version:  v20.18.0
+[debug] [2025-04-19T06:35:42.873Z] Time:          Sat Apr 19 2025 12:05:42 GMT+0530 (India Standard Time)
+[debug] [2025-04-19T06:35:42.873Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-04-19T06:35:42.876Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[debug] [2025-04-19T06:35:42.925Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-04-19T06:35:42.926Z] > authorizing via signed-in user (soyadhananjay@gmail.com)
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  /home/aveosoft/gujarat_rene/gujarat-renewables
+
+[debug] [2025-04-19T06:35:43.593Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
+[debug] [2025-04-19T06:35:43.594Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}
+[debug] [2025-04-19T06:36:44.017Z] Error: Timed out.
+    at Timeout._onTimeout (/home/aveosoft/.nvm/versions/node/v20.18.0/lib/node_modules/firebase-tools/lib/utils.js:269:49)
+    at listOnTimeout (node:internal/timers:581:17)
+    at process.processTimers (node:internal/timers:519:7)
+[error] 
+[error] Error: An unexpected error has occurred.
