@@ -16,17 +16,10 @@ export default function Home() {
   const { language } = useLanguage();
   const t = translations[language];
 
-  const seoTitle = language === 'gu' 
-    ? 'ગુજરાત રિન્યુએબલ્સ | સોલાર લેન્ડ એગ્રિગેટર' 
-    : 'Gujarat Renewables | Solar Land Aggregator';
-  
-  const seoDescription = language === 'gu'
-    ? 'ગુજરાતમાં સોલાર પ્રોજેક્ટ્સ માટે તમારી જમીન ભાડે આપો અથવા વેચો. સોલાર પ્રોજેક્ટ્સ માટે અમે જમીન સંપાદન અને લીઝ સેવાઓ પ્રદાન કરીએ છીએ.'
-    : 'Lease or sell your land for solar projects in Gujarat. We provide land acquisition and leasing services for solar projects.';
-
-  const seoKeywords = language === 'gu'
-    ? 'solar land Gujarat, solar land aggregator, solar farm land Gujarat, sell land for solar Gujarat, lease land for solar projects, ગુજરાતમાં સોલાર પ્રોજેક્ટ્સ, solar land investment Gujarat'
-    : 'solar land Gujarat, solar land aggregator, solar farm land Gujarat, sell land for solar Gujarat, lease land for solar projects, solar land investment Gujarat, gujarat renewable energy';
+  // Always use English for SEO to optimize for English searches
+  const seoTitle = 'Gujarat Renewables | Solar Land Aggregator in Gujarat | Solar Project Land';
+  const seoDescription = 'Gujarat Renewables provides premium land acquisition and leasing services for solar projects in Gujarat. Lease or sell your land for solar energy projects with the best solar land aggregator in Gujarat.';
+  const seoKeywords = 'solar land Gujarat, solar land aggregator, solar farm land Gujarat, sell land for solar Gujarat, lease land for solar projects, solar land investment Gujarat, gujarat renewable energy, solar project land, solar land acquisition, solar energy land Gujarat';
 
   return (
     <>
@@ -34,7 +27,7 @@ export default function Home() {
         title={seoTitle}
         description={seoDescription}
         keywords={seoKeywords}
-        language={language as 'gu' | 'en'}
+        language='en'
         ogImage="/og-image.svg"
       />
       <SchemaOrg

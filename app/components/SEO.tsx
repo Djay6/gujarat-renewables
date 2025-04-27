@@ -14,12 +14,12 @@ interface SEOProps {
 }
 
 export default function SEO({
-  title = 'ગુજરાત રિન્યુએબલ્સ | સોલાર લેન્ડ એગ્રિગેટર',
-  description = 'ગુજરાતમાં સોલાર પ્રોજેક્ટ્સ માટે તમારી જમીન ભાડે આપો અથવા વેચો. સોલાર પ્રોજેક્ટ્સ માટે અમે જમીન સંપાદન અને લીઝ સેવાઓ પ્રદાન કરીએ છીએ.',
-  keywords = 'solar land Gujarat, solar land aggregator, solar farm land Gujarat, sell land for solar Gujarat, lease land for solar projects, ગુજરાતમાં સોલાર પ્રોજેક્ટ્સ, solar land investment Gujarat',
+  title = 'Gujarat Renewables | Solar Land Aggregator in Gujarat | Solar Energy Projects',
+  description = 'Gujarat Renewables provides premium land acquisition and leasing services for solar projects in Gujarat. Lease or sell your land for solar energy projects with the best solar land aggregator in Gujarat.',
+  keywords = 'solar land Gujarat, solar land aggregator, solar farm land Gujarat, sell land for solar Gujarat, lease land for solar projects, solar land investment Gujarat, gujarat renewable energy, solar project land, solar land acquisition',
   ogType = 'website',
   ogImage = '/og-image.svg',
-  language = 'gu',
+  language = 'en',
 }: SEOProps) {
   const pathname = usePathname();
   const canonicalUrl = `https://gujaratrenewables.com${pathname}`;
@@ -28,6 +28,9 @@ export default function SEO({
   useEffect(() => {
     // Update the document title
     document.title = title;
+    
+    // Set the document language to English for SEO
+    document.documentElement.lang = 'en';
   }, [title]);
   
   return (
@@ -42,7 +45,7 @@ export default function SEO({
       <meta property="og:type" content={ogType} />
       <meta property="og:url" content={canonicalUrl} />
       <meta property="og:image" content={ogImage} />
-      <meta property="og:locale" content={language === 'gu' ? 'gu_IN' : 'en_US'} />
+      <meta property="og:locale" content="en_US" />
       
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
@@ -52,6 +55,12 @@ export default function SEO({
       
       {/* Canonical URL */}
       <link rel="canonical" href={canonicalUrl} />
+      
+      {/* Additional SEO tags */}
+      <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+      <meta name="author" content="Gujarat Renewables" />
+      <meta name="geo.region" content="IN-GJ" />
+      <meta name="geo.placename" content="Gujarat" />
     </Head>
   );
 } 
