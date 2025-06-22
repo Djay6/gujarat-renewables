@@ -47,7 +47,7 @@ export default function RootLayout({
       <head>
         <link rel="canonical" href="https://gujaratrenewables.com" />
       </head>
-      <body className={`font-sans ${hindVadodara.className} overflow-x-hidden`}>
+      <body className={`font-sans ${hindVadodara.className} overflow-x-hidden bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800`}>
         <LanguageProvider>
           {children}
         </LanguageProvider>

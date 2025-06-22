@@ -132,7 +132,7 @@ export default function Benefits() {
   };
 
   return (
-    <div className="relative py-20 px-4" id="benefits">
+    <section className="section-padding relative" id="benefits">
       {/* Solar panel background with enhanced overlay */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-b from-white via-white to-transparent opacity-90"></div>
@@ -151,7 +151,7 @@ export default function Benefits() {
         <div className="absolute top-1/3 -right-10 w-72 h-72 bg-green-500 rounded-full filter blur-3xl opacity-10"></div>
       </div>
       
-      <div className="relative z-10 max-w-7xl mx-auto">
+      <div className="container-content">
         {/* Section Header with Solar Icon */}
         <div className="flex flex-col items-center mb-16">
           <div className="w-20 h-20 bg-green-600 rounded-full flex items-center justify-center shadow-lg mb-6 p-5 border-4 border-white">
@@ -159,7 +159,7 @@ export default function Benefits() {
               <path d="M3.55 19.09L4.96 20.5L6.76 18.71L5.34 17.29M12 6C8.69 6 6 8.69 6 12S8.69 18 12 18 18 15.31 18 12C18 8.68 15.31 6 12 6M20 13H23V11H20M17.24 18.71L19.04 20.5L20.45 19.09L18.66 17.29M20.45 5L19.04 3.5L17.24 5.29L18.66 6.71M13 1H11V4H13M6.76 5.29L4.96 3.5L3.55 4.91L5.34 6.71M1 13H4V11H1M13 20H11V23H13" />
             </svg>
           </div>
-          <h2 className="text-3xl md:text-5xl font-bold text-center text-green-800 mb-4">
+          <h2 className="section-title md:text-5xl">
             {benefitsTitle[language]}
           </h2>
           <div className="w-24 h-1 bg-gradient-to-r from-green-600 to-green-400 rounded-full"></div>
@@ -169,7 +169,7 @@ export default function Benefits() {
           {benefits.map((benefit, index) => (
             <div 
               key={index} 
-              className="bg-white p-8 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-gray-100 flex flex-col items-center text-center group relative overflow-hidden"
+              className="card p-8 flex flex-col items-center text-center group relative overflow-hidden hover:-translate-y-2"
             >
               {/* Solar ray decorative element */}
               <div className="absolute -top-10 -right-10 w-24 h-24 bg-yellow-400 opacity-0 group-hover:opacity-10 rounded-full transition-all duration-500 transform group-hover:scale-150"></div>
@@ -180,10 +180,10 @@ export default function Benefits() {
               
               {/* Solar panel decorative element at bottom */}
               <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-green-600 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-          </div>
-        ))}
+            </div>
+          ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 } 

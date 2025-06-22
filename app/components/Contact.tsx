@@ -1,8 +1,12 @@
 "use client";
 
 import { useLanguage } from '../context/LanguageContext';
+import { useState } from 'react';
+import { db } from '../firebase';
+import { collection, addDoc } from 'firebase/firestore';
 
 export default function Contact() {
+  console.log('Contact component rendered');
   const { language } = useLanguage();
   
   // Contact section translations
@@ -44,19 +48,52 @@ export default function Contact() {
   // Get content for current language
   const t = content[language];
 
+  // Add state for form fields and feedback
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState('');
+  const [error, setError] = useState('');
+
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    console.log('Send a Message form submitted');
+    e.preventDefault();
+    setLoading(true);
+    setFeedback('');
+    setError('');
+    try {
+      await addDoc(collection(db, 'messages'), {
+        name,
+        email,
+        message,
+        createdAt: new Date(),
+      });
+      setFeedback(language === 'gu' ? 'તમારો સંદેશ સફળતાપૂર્વક મોકલાયો!' : 'Your message has been sent successfully!');
+      setName('');
+      setEmail('');
+      setMessage('');
+    } catch (err) {
+      setError(language === 'gu' ? 'માફ કરો, સંદેશ મોકલવામાં ભૂલ આવી.' : 'Sorry, there was an error sending your message.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <section id="contact" className="py-16 px-4 relative bg-gradient-to-b from-white to-green-50">
-      <div className="max-w-6xl mx-auto relative z-10">
+    <section id="contact" className="section-padding relative bg-gradient-to-b from-white to-green-50">
+      <div className="container-content">
         <div className="text-center mb-12">
-          <div className="inline-block p-2 bg-green-100 rounded-full mb-4">
-            <svg className="w-10 h-10 text-green-600" viewBox="0 0 24 24" fill="currentColor">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-6">
+            <svg className="w-8 h-8 text-green-600" viewBox="0 0 24 24" fill="currentColor">
               <path d="M6.62,10.79C8.06,13.62 10.38,15.94 13.21,17.38L15.41,15.18C15.69,14.9 16.08,14.82 16.43,14.93C17.55,15.3 18.75,15.5 20,15.5A1,1 0 0,1 21,16.5V20A1,1 0 0,1 20,21A17,17 0 0,1 3,4A1,1 0 0,1 4,3H7.5A1,1 0 0,1 8.5,4C8.5,5.25 8.7,6.45 9.07,7.57C9.18,7.92 9.1,8.31 8.82,8.59L6.62,10.79Z" />
             </svg>
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold text-green-800 mb-4">
+          <h2 className="section-title">
             {t.title}
           </h2>
-          <p className="text-green-700 mb-4 max-w-2xl mx-auto text-lg">
+          <p className="section-subtitle">
             {t.subtitle}
           </p>
         </div>
@@ -131,64 +168,85 @@ export default function Contact() {
             </div>
           </div>
           
-          <div className="bg-white p-8 rounded-xl shadow-lg border border-green-100">
+          <div className="card p-8">
             <h3 className="text-xl font-bold mb-6 text-green-800">{t.formTitle}</h3>
             
-            <form className="space-y-5">
+            <form className="space-y-5" onSubmit={handleSubmit}>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="name">
+                <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="name">
                   Name
                 </label>
                 <input
                   type="text"
                   id="name"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
                   placeholder={t.namePlaceholder}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+                  required
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="email">
+                <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="email">
                   Email
                 </label>
                 <input
                   type="email"
                   id="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
                   placeholder={t.emailPlaceholder}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+                  required
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="message">
+                <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="message">
                   Message
                 </label>
                 <textarea
                   id="message"
-                  rows={5}
+                  value={message}
+                  onChange={e => setMessage(e.target.value)}
                   placeholder={t.messagePlaceholder}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors resize-none"
+                  rows={5}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+                  required
                 ></textarea>
               </div>
               
               <button 
                 type="submit" 
-                className="bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-3 rounded-lg transition-colors w-full md:w-auto flex items-center justify-center space-x-2">
-                <span>{t.sendButton}</span>
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M2,21L23,12L2,3V10L17,12L2,14V21Z" />
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-3 px-6 rounded-xl font-medium transition-all duration-300 hover:shadow-lg disabled:opacity-70"
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
+                    Processing...
+                  </div>
+                ) : (
+                  t.sendButton
+                )}
               </button>
             </form>
             
-            {/* Solar energy illustration */}
-            <div className="mt-8 relative">
-              <div className="flex justify-center opacity-10">
-                <svg width="200" height="75" viewBox="0 0 24 24" fill="#166534">
-                  <path d="M3.55 19.09L4.96 20.5L6.76 18.71L5.34 17.29M12 6C8.69 6 6 8.69 6 12S8.69 18 12 18 18 15.31 18 12C18 8.68 15.31 6 12 6M20 13H23V11H20M17.24 18.71L19.04 20.5L20.45 19.09L18.66 17.29M20.45 5L19.04 3.5L17.24 5.29L18.66 6.71M13 1H11V4H13M6.76 5.29L4.96 3.5L3.55 4.91L5.34 6.71M1 13H4V11H1M13 20H11V23H13" />
-                </svg>
+            {feedback && (
+              <div className="mt-4 bg-green-50 text-green-700 p-4 rounded-xl border-l-4 border-green-500">
+                {feedback}
               </div>
+            )}
+            
+            {error && (
+              <div className="mt-4 bg-red-50 text-red-700 p-4 rounded-xl border-l-4 border-red-500">
+                {error}
             </div>
+            )}
           </div>
         </div>
       </div>

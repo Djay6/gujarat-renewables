@@ -61,7 +61,7 @@ export default function Header() {
         <LanguageSwitcher />
       </div>
       
-      <div className="max-w-6xl mx-auto flex flex-col items-center text-center relative z-10">
+      <div className="container-content flex flex-col items-center text-center">
         <div className="mb-8 bg-yellow-400/20 p-5 rounded-full inline-block backdrop-blur-sm border border-yellow-400/30 shadow-lg shadow-yellow-500/10">
           {/* Solar panel icon with sun rays */}
           <svg className="w-16 h-16 text-yellow-300" viewBox="0 0 24 24" fill="currentColor">
@@ -71,7 +71,7 @@ export default function Header() {
         
         <h1 className="text-4xl md:text-6xl font-bold mb-4 drop-shadow-lg">{t.header.title}</h1>
         
-        <div className="bg-black/40 backdrop-blur-sm py-4 px-8 rounded-xl mb-10 max-w-3xl border border-white/10 shadow-2xl">
+        <div className="bg-black/40 backdrop-blur-sm py-4 px-8 rounded-xl mb-10 max-w-3xl border border-white/10 shadow-xl">
           <p className="text-xl md:text-2xl text-white leading-relaxed">
             {t.header.subtitle}
           </p>
@@ -80,7 +80,7 @@ export default function Header() {
         <div className="flex flex-col sm:flex-row gap-6 justify-center">
           <a 
             href="#form" 
-            className="bg-white text-green-700 hover:bg-yellow-50 font-bold py-4 px-8 rounded-lg text-lg transition-all shadow-xl hover:shadow-2xl transform hover:-translate-y-1 flex items-center justify-center border-b-4 border-green-500"
+            className="bg-white text-green-700 hover:bg-yellow-50 font-bold py-4 px-8 rounded-xl text-lg transition-all shadow-xl hover:shadow-2xl transform hover:-translate-y-1 flex items-center justify-center border-b-4 border-green-500"
           >
             <svg className="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
               <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path>
@@ -89,7 +89,7 @@ export default function Header() {
           </a>
           <a 
             href="#benefits" 
-            className="bg-green-600 hover:bg-green-500 text-white border-2 border-white/30 font-bold py-4 px-8 rounded-lg text-lg transition-all shadow-xl hover:shadow-2xl transform hover:-translate-y-1 flex items-center justify-center"
+            className="bg-green-600 hover:bg-green-500 text-white border-2 border-white/30 font-bold py-4 px-8 rounded-xl text-lg transition-all shadow-xl hover:shadow-2xl transform hover:-translate-y-1 flex items-center justify-center"
           >
             {/* Solar panel icon */}
             <svg className="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 24 24">

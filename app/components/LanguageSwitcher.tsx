@@ -36,7 +36,7 @@ export default function LanguageSwitcher() {
       <button
         type="button"
         onClick={toggleDropdown}
-        className="inline-flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+        className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white/90 backdrop-blur-sm border border-gray-300 rounded-xl shadow-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all"
       >
         <span className="mr-2">{language === 'gu' ? 'ગુજરાતી' : 'English'}</span>
         <svg className="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -45,13 +45,13 @@ export default function LanguageSwitcher() {
       </button>
 
       {isOpen && (
-        <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
+        <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-xl shadow-xl bg-white/95 backdrop-blur-sm ring-1 ring-black/5 focus:outline-none z-10 border border-gray-200">
           <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
             <button
               onClick={() => changeLanguage('gu')}
               className={`${
-                language === 'gu' ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-              } block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 hover:text-gray-900`}
+                language === 'gu' ? 'bg-green-50 text-green-700' : 'text-gray-700'
+              } block w-full text-left px-4 py-2 text-sm hover:bg-green-50 hover:text-green-700 transition-colors`}
               role="menuitem"
             >
               ગુજરાતી
@@ -59,8 +59,8 @@ export default function LanguageSwitcher() {
             <button
               onClick={() => changeLanguage('en')}
               className={`${
-                language === 'en' ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-              } block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 hover:text-gray-900`}
+                language === 'en' ? 'bg-green-50 text-green-700' : 'text-gray-700'
+              } block w-full text-left px-4 py-2 text-sm hover:bg-green-50 hover:text-green-700 transition-colors`}
               role="menuitem"
             >
               English

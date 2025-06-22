@@ -39,7 +39,19 @@ interface CompanyRequest extends BaseRequest {
   option: string; // 'buy' or 'lease'
 }
 
-type Request = LandRequest | CompanyRequest;
+interface MessageRequest {
+  id: string;
+  name: string;
+  emailOrMobile: string;
+  message: string;
+  createdAt: any;
+  userType: 'message';
+  status?: string; // 'new' | 'contacted' | 'spam'
+  remarks?: string;
+  lastUpdated?: any;
+}
+
+type Request = LandRequest | CompanyRequest | MessageRequest;
 
 export default function AdminPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -56,10 +68,10 @@ export default function AdminPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [districtFilter, setDistrictFilter] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [requestTypeFilter, setRequestTypeFilter] = useState("all"); // 'all', 'landowner', 'company'
+  const [requestTypeFilter, setRequestTypeFilter] = useState("all"); // 'all', 'landowner', 'company', 'message'
   
   // Get unique districts for filtering
-  const uniqueDistricts = [...new Set(requests.map(req => req.district))].filter(Boolean).sort();
+  const uniqueDistricts = [...new Set(requests.map(req => 'district' in req ? req.district : ''))].filter(Boolean).sort();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,8 +116,23 @@ export default function AdminPage() {
         } as CompanyRequest);
       });
       
-      // Combine both types of requests
-      const allRequests = [...landRequests, ...companyRequests];
+      // Fetch messages from contact form
+      const messagesQ = query(collection(db, 'messages'), orderBy('createdAt', 'desc'));
+      const messagesSnapshot = await getDocs(messagesQ);
+      const messageRequests: MessageRequest[] = [];
+      
+      messagesSnapshot.forEach((doc) => {
+        const data = doc.data();
+        messageRequests.push({
+          id: doc.id,
+          ...data,
+          userType: 'message',
+          status: data.status || 'new' // Default status
+        } as MessageRequest);
+      });
+      
+      // Combine all types of requests
+      const allRequests = [...landRequests, ...companyRequests, ...messageRequests];
       
       // Sort by created date (newest first)
       allRequests.sort((a, b) => b.createdAt.toDate() - a.createdAt.toDate());
@@ -133,7 +160,13 @@ export default function AdminPage() {
 
   const updateRequestStatus = async (request: Request, newStatus: string) => {
     try {
-      const collectionName = request.userType === 'landowner' ? 'landRequests' : 'companyRequests';
+      let collectionName = 'landRequests';
+      if (request.userType === 'company') {
+        collectionName = 'companyRequests';
+      } else if (request.userType === 'message') {
+        collectionName = 'messages';
+      }
+      
       const requestRef = doc(db, collectionName, request.id);
       await updateDoc(requestRef, {
         status: newStatus,
@@ -159,7 +192,13 @@ export default function AdminPage() {
     
     setIsSaving(true);
     try {
-      const collectionName = selectedRequest.userType === 'landowner' ? 'landRequests' : 'companyRequests';
+      let collectionName = 'landRequests';
+      if (selectedRequest.userType === 'company') {
+        collectionName = 'companyRequests';
+      } else if (selectedRequest.userType === 'message') {
+        collectionName = 'messages';
+      }
+      
       const requestRef = doc(db, collectionName, selectedRequest.id);
       await updateDoc(requestRef, {
         remarks: remarks,
@@ -199,28 +238,35 @@ export default function AdminPage() {
     
     // Apply district filter
     if (districtFilter) {
-      filtered = filtered.filter(req => req.district === districtFilter);
+      filtered = filtered.filter(req => 
+        req.userType === 'message' ? false : (req as BaseRequest).district === districtFilter
+      );
     }
     
     // Apply search query
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       filtered = filtered.filter(req => {
-        // Common fields for all request types
-        const nameMatch = req.name.toLowerCase().includes(query);
-        const mobileMatch = req.mobile.includes(query);
-        const districtMatch = req.district.toLowerCase().includes(query);
-        
         // Type-specific matches
         if (req.userType === 'landowner') {
           const landReq = req as LandRequest;
-          return nameMatch || mobileMatch || districtMatch || 
+          return landReq.name.toLowerCase().includes(query) || 
+                 landReq.mobile.includes(query) ||
+                 landReq.district.toLowerCase().includes(query) || 
                  landReq.village.toLowerCase().includes(query);
-        } else {
+        } else if (req.userType === 'company') {
           const companyReq = req as CompanyRequest;
-          return nameMatch || mobileMatch || districtMatch || 
+          return companyReq.name.toLowerCase().includes(query) || 
+                 companyReq.mobile.includes(query) ||
+                 companyReq.district.toLowerCase().includes(query) || 
                  companyReq.companyName.toLowerCase().includes(query) ||
                  companyReq.email.toLowerCase().includes(query);
+        } else {
+          // Message type
+          const messageReq = req as MessageRequest;
+          return messageReq.name.toLowerCase().includes(query) || 
+                 messageReq.emailOrMobile.toLowerCase().includes(query) ||
+                 messageReq.message.toLowerCase().includes(query);
         }
       });
     }
@@ -241,8 +287,10 @@ export default function AdminPage() {
   const getUserTypeBadge = (userType: string) => {
     if (userType === 'landowner') {
       return <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">જમીન માલિક</span>;
-    } else {
+    } else if (userType === 'company') {
       return <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">સોલાર કંપની</span>;
+    } else {
+      return <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">સંદેશ</span>;
     }
   };
 
@@ -358,6 +406,7 @@ export default function AdminPage() {
                   <option value="all">બધા પ્રકારો</option>
                   <option value="landowner">જમીન માલિકો</option>
                   <option value="company">સોલાર કંપનીઓ</option>
+                  <option value="message">સંદેશ</option>
                 </select>
               </div>
               
@@ -443,19 +492,16 @@ export default function AdminPage() {
                               વિગતો
                             </th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              સ્થાન
+                              સંપર્ક
                             </th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              જમીન/જરૂરિયાત
+                              વિગતો
                             </th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                               સ્ટેટસ
                             </th>
                             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              એક્શન
-                            </th>
-                            <th scope="col" className="relative px-6 py-3">
-                              <span className="sr-only">જુઓ</span>
+                              ક્રિયાઓ
                             </th>
                           </tr>
                         </thead>
@@ -466,42 +512,38 @@ export default function AdminPage() {
                                 {getUserTypeBadge(request.userType)}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex items-center">
-                                  <div>
-                                    <div className="text-sm font-medium text-gray-900">
-                                      {request.name}
-                                    </div>
-                                    <div className="text-sm text-gray-500">
-                                      {request.mobile}
-                                    </div>
-                                    {request.userType === 'company' && (
-                                      <>
-                                        <div className="text-sm text-gray-500">
-                                          {(request as CompanyRequest).companyName}
-                                        </div>
-                                        <div className="text-sm text-gray-500">
-                                          {(request as CompanyRequest).email}
-                                        </div>
-                                      </>
-                                    )}
-                                  </div>
+                                <div className="text-sm font-medium text-gray-900">
+                                  {request.name}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  {request.userType === 'landowner' ? (
+                                    `${(request as LandRequest).village}, ${(request as LandRequest).district}`
+                                  ) : request.userType === 'company' ? (
+                                    (request as CompanyRequest).companyName
+                                  ) : (
+                                    `${(request as MessageRequest).message.substring(0, 30)}${(request as MessageRequest).message.length > 30 ? '...' : ''}`
+                                  )}
                                 </div>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-900">{request.district}</div>
-                                <div className="text-sm text-gray-500">{request.taluka}</div>
-                                {request.userType === 'landowner' && (
+                                <div className="text-sm text-gray-900">
+                                  {request.userType === 'message' ? 
+                                    (request as MessageRequest).emailOrMobile :
+                                    (request as BaseRequest).mobile
+                                  }
+                                </div>
+                                {request.userType === 'company' && (
                                   <div className="text-sm text-gray-500">
-                                    {(request as LandRequest).village}
+                                    {(request as CompanyRequest).email}
                                   </div>
                                 )}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-900">
-                                  {request.landSize} એકર
-                                </div>
                                 {request.userType === 'landowner' ? (
                                   <>
+                                    <div className="text-sm text-gray-900">
+                                      {(request as LandRequest).landSize} એકર
+                                    </div>
                                     <div className="text-sm text-gray-500">
                                       {(request as LandRequest).option === 'sell' ? 'વેચાણ' : 'ભાડા પર'} - ₹{(request as LandRequest).rate}
                                     </div>
@@ -509,8 +551,11 @@ export default function AdminPage() {
                                       {(request as LandRequest).isOwner === 'yes' ? 'માલિક' : 'દલાલ'}
                                     </div>
                                   </>
-                                ) : (
+                                ) : request.userType === 'company' ? (
                                   <>
+                                    <div className="text-sm text-gray-900">
+                                      {(request as CompanyRequest).landSize} એકર
+                                    </div>
                                     <div className="text-sm text-gray-500">
                                       {(request as CompanyRequest).option === 'buy' ? 'ખરીદવા માંગે છે' : 'ભાડે લેવા માંગે છે'}
                                     </div>
@@ -518,50 +563,45 @@ export default function AdminPage() {
                                       બજેટ: ₹{(request as CompanyRequest).budget}
                                     </div>
                                   </>
+                                ) : (
+                                  <div className="text-sm text-gray-500 italic">
+                                    સંદેશ
+                                  </div>
                                 )}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 {getStatusBadge(request.status || 'new')}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                <div className="flex space-x-2">
-                                  <button 
-                                    onClick={() => updateRequestStatus(request, 'contacted')}
-                                    className="text-blue-600 hover:text-blue-900"
-                                    title="સંપર્ક કર્યો"
-                                  >
-                                    📞
-                                  </button>
-                                  <button 
-                                    onClick={() => updateRequestStatus(request, 'spam')}
-                                    className="text-red-600 hover:text-red-900"
-                                    title="સ્પામ"
-                                  >
-                                    🚫
-                                  </button>
-                                  <button 
-                                    onClick={() => updateRequestStatus(request, 'unavailable')}
-                                    className="text-gray-600 hover:text-gray-900"
-                                    title="ઉપલબ્ધ નથી"
-                                  >
-                                    ❌
-                                  </button>
-                                  <button 
-                                    onClick={() => updateRequestStatus(request, 'new')}
-                                    className="text-yellow-600 hover:text-yellow-900"
-                                    title="નવું"
-                                  >
-                                    🔄
-                                  </button>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <button
                                   onClick={() => openModal(request)}
-                                  className="text-green-600 hover:text-green-900"
+                                  className="text-green-600 hover:text-green-900 mr-3"
                                 >
-                                  વિગતો જુઓ
+                                  જુઓ
                                 </button>
+                                <div className="inline-flex rounded-md shadow-sm mt-1" role="group">
+                                  <button
+                                    type="button"
+                                    onClick={() => updateRequestStatus(request, 'contacted')}
+                                    className="px-2 py-1 text-xs font-medium rounded-l-lg border border-gray-200 bg-white text-gray-900 hover:bg-gray-100"
+                                  >
+                                    સંપર્ક કર્યો
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => updateRequestStatus(request, 'unavailable')}
+                                    className="px-2 py-1 text-xs font-medium border-t border-b border-gray-200 bg-white text-gray-900 hover:bg-gray-100"
+                                  >
+                                    ઉપલબ્ધ નથી
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => updateRequestStatus(request, 'spam')}
+                                    className="px-2 py-1 text-xs font-medium rounded-r-lg border border-gray-200 bg-white text-gray-900 hover:bg-gray-100"
+                                  >
+                                    સ્પામ
+                                  </button>
+                                </div>
                               </td>
                             </tr>
                           ))}
@@ -578,279 +618,219 @@ export default function AdminPage() {
 
       {/* Detail Modal */}
       {isModalOpen && selectedRequest && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h3 className="text-lg font-medium text-gray-900">
-                {selectedRequest.userType === 'landowner' ? 'જમીન માલિકની વિગતો' : 'કંપનીની વિગતો'}
-              </h3>
-              <button
-                onClick={closeModal}
-                className="text-gray-400 hover:text-gray-500"
-              >
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+        <div className="fixed z-10 inset-0 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
             </div>
-            
-            <div className="px-6 py-4">
-              {/* Status badges at top */}
-              <div className="mb-4 flex justify-between items-center">
-                <div className="flex space-x-2">
-                  {getUserTypeBadge(selectedRequest.userType)}
-                  {getStatusBadge(selectedRequest.status || 'new')}
-                  {selectedRequest.userType === 'landowner' ? (
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      (selectedRequest as LandRequest).option === 'sell' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
-                    }`}>
-                      {(selectedRequest as LandRequest).option === 'sell' ? 'વેચાણ' : 'ભાડે'}
-                    </span>
-                  ) : (
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      (selectedRequest as CompanyRequest).option === 'buy' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
-                    }`}>
-                      {(selectedRequest as CompanyRequest).option === 'buy' ? 'ખરીદવા' : 'ભાડે લેવા'}
-                    </span>
-                  )}
-                </div>
-                
-                {/* Status change buttons */}
-                <div className="flex space-x-2">
-                  <button 
-                    onClick={() => updateRequestStatus(selectedRequest, 'contacted')}
-                    className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      selectedRequest.status === 'contacted' 
-                        ? 'bg-blue-200 text-blue-800' 
-                        : 'bg-gray-100 text-gray-800 hover:bg-blue-100'
-                    }`}
-                  >
-                    સંપર્ક કર્યો
-                  </button>
-                  <button 
-                    onClick={() => updateRequestStatus(selectedRequest, 'spam')}
-                    className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      selectedRequest.status === 'spam' 
-                        ? 'bg-red-200 text-red-800' 
-                        : 'bg-gray-100 text-gray-800 hover:bg-red-100'
-                    }`}
-                  >
-                    સ્પામ
-                  </button>
-                  <button 
-                    onClick={() => updateRequestStatus(selectedRequest, 'unavailable')}
-                    className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      selectedRequest.status === 'unavailable' 
-                        ? 'bg-gray-300 text-gray-800' 
-                        : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                    }`}
-                  >
-                    ઉપલબ્ધ નથી
-                  </button>
-                </div>
-              </div>
 
-              <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
-                {/* Common fields for both request types */}
-                <div className="sm:col-span-1">
-                  <dt className="text-sm font-medium text-gray-500">નામ</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{selectedRequest.name}</dd>
-                </div>
-                
-                <div className="sm:col-span-1">
-                  <dt className="text-sm font-medium text-gray-500">મોબાઇલ નંબર</dt>
-                  <dd className="mt-1 text-sm text-gray-900">
-                    <a href={`tel:${selectedRequest.mobile}`} className="text-blue-600 hover:underline">
-                      {selectedRequest.mobile}
-                    </a>
-                  </dd>
-                </div>
-                
-                {/* Company specific fields */}
-                {selectedRequest.userType === 'company' && (
-                  <>
-                    <div className="sm:col-span-1">
-                      <dt className="text-sm font-medium text-gray-500">કંપનીનું નામ</dt>
-                      <dd className="mt-1 text-sm text-gray-900">
-                        {(selectedRequest as CompanyRequest).companyName}
-                      </dd>
-                    </div>
-                    
-                    <div className="sm:col-span-1">
-                      <dt className="text-sm font-medium text-gray-500">ઈમેઇલ</dt>
-                      <dd className="mt-1 text-sm text-gray-900">
-                        <a href={`mailto:${(selectedRequest as CompanyRequest).email}`} className="text-blue-600 hover:underline">
-                          {(selectedRequest as CompanyRequest).email}
-                        </a>
-                      </dd>
-                    </div>
-                  </>
-                )}
-                
-                {/* Location info for both types */}
-                <div className="sm:col-span-1">
-                  <dt className="text-sm font-medium text-gray-500">જિલ્લો</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{selectedRequest.district}</dd>
-                </div>
-                
-                <div className="sm:col-span-1">
-                  <dt className="text-sm font-medium text-gray-500">તાલુકો</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{selectedRequest.taluka}</dd>
-                </div>
-                
-                {/* Landowner specific fields */}
-                {selectedRequest.userType === 'landowner' && (
-                  <>
-                    <div className="sm:col-span-1">
-                      <dt className="text-sm font-medium text-gray-500">ગામ</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{(selectedRequest as LandRequest).village}</dd>
-                    </div>
-                    
-                    <div className="sm:col-span-1">
-                      <dt className="text-sm font-medium text-gray-500">સ્થાન વિગતો</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{(selectedRequest as LandRequest).location || 'N/A'}</dd>
-                    </div>
-                  </>
-                )}
-                
-                {/* Land details for both types */}
-                <div className="sm:col-span-1">
-                  <dt className="text-sm font-medium text-gray-500">જમીનનું માપ</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{selectedRequest.landSize} એકર</dd>
-                </div>
-                
-                {selectedRequest.userType === 'landowner' ? (
-                  <>
-                    <div className="sm:col-span-1">
-                      <dt className="text-sm font-medium text-gray-500">વિકલ્પ</dt>
-                      <dd className="mt-1 text-sm text-gray-900">
-                        {(selectedRequest as LandRequest).option === 'sell' ? 'વેચાણ' : 'ભાડે આપવી'}
-                      </dd>
-                    </div>
-                    
-                    <div className="sm:col-span-1">
-                      <dt className="text-sm font-medium text-gray-500">
-                        {(selectedRequest as LandRequest).option === 'sell' ? 'વેચાણ દર' : 'ભાડા દર'}
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-900">
-                        ₹{(selectedRequest as LandRequest).rate} {(selectedRequest as LandRequest).option === 'lease' ? 'પ્રતિ એકર પ્રતિ વર્ષ' : 'પ્રતિ એકર'}
-                      </dd>
-                    </div>
-                    
-                    <div className="sm:col-span-1">
-                      <dt className="text-sm font-medium text-gray-500">માલિક છે?</dt>
-                      <dd className="mt-1 text-sm text-gray-900">
-                        {(selectedRequest as LandRequest).isOwner === 'yes' ? 'હા, માલિક છે' : 'ના, દલાલ છે'}
-                      </dd>
-                    </div>
-                    
-                    <div className="sm:col-span-1">
-                      <dt className="text-sm font-medium text-gray-500">સબસ્ટેશન</dt>
-                      <dd className="mt-1 text-sm text-gray-900">
-                        {(selectedRequest as LandRequest).substationName} ({(selectedRequest as LandRequest).substationDistance} કિમી)
-                      </dd>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="sm:col-span-1">
-                      <dt className="text-sm font-medium text-gray-500">વિકલ્પ</dt>
-                      <dd className="mt-1 text-sm text-gray-900">
-                        {(selectedRequest as CompanyRequest).option === 'buy' ? 'ખરીદવા માંગે છે' : 'ભાડે લેવા માંગે છે'}
-                      </dd>
-                    </div>
-                    
-                    <div className="sm:col-span-1">
-                      <dt className="text-sm font-medium text-gray-500">બજેટ</dt>
-                      <dd className="mt-1 text-sm text-gray-900">
-                        ₹{(selectedRequest as CompanyRequest).budget} પ્રતિ એકર
-                      </dd>
-                    </div>
-                    
-                    <div className="sm:col-span-1">
-                      <dt className="text-sm font-medium text-gray-500">સમયમર્યાદા</dt>
-                      <dd className="mt-1 text-sm text-gray-900">
-                        {(selectedRequest as CompanyRequest).timeline}
-                      </dd>
-                    </div>
-                    
-                    <div className="sm:col-span-2">
-                      <dt className="text-sm font-medium text-gray-500">આવશ્યકતાઓ</dt>
-                      <dd className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">
-                        {(selectedRequest as CompanyRequest).requirements}
-                      </dd>
-                    </div>
-                  </>
-                )}
-                
-                {/* Timing info for both */}
-                <div className="sm:col-span-2">
-                  <dt className="text-sm font-medium text-gray-500">સબમિટ કર્યાની તારીખ</dt>
-                  <dd className="mt-1 text-sm text-gray-900">
-                    {selectedRequest.createdAt.toDate().toLocaleString('gu-IN', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </dd>
-                </div>
-                
-                {/* Last updated */}
-                {selectedRequest.lastUpdated && (
-                  <div className="sm:col-span-2">
-                    <dt className="text-sm font-medium text-gray-500">અપડેટ કર્યાની તારીખ</dt>
-                    <dd className="mt-1 text-sm text-gray-900">
-                      {selectedRequest.lastUpdated.toDate().toLocaleString('gu-IN', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </dd>
-                  </div>
-                )}
-              </dl>
-              
-              {/* Notes/Remarks section */}
-              <div className="mt-6">
-                <label htmlFor="remarks" className="block text-sm font-medium text-gray-700 mb-2">
-                  નોંધ
-                </label>
-                <textarea
-                  id="remarks"
-                  name="remarks"
-                  rows={4}
-                  value={remarks}
-                  onChange={(e) => setRemarks(e.target.value)}
-                  className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                  placeholder="આ રિક્વેસ્ટ વિશે કોઈ નોંધ લખો..."
-                />
-                <div className="mt-2 flex justify-end">
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="flex items-center justify-between p-4 border-b">
+                  <h3 className="text-lg font-medium text-gray-900">
+                    {selectedRequest.userType === 'landowner' ? 'જમીન માલિકની વિગતો' : selectedRequest.userType === 'company' ? 'કંપનીની વિગતો' : 'સંદેશ'}
+                  </h3>
                   <button
                     type="button"
-                    onClick={saveRemarks}
-                    disabled={isSaving}
-                    className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${
-                      isSaving ? 'opacity-75 cursor-not-allowed' : ''
-                    }`}
+                    className="text-gray-400 hover:text-gray-500"
+                    onClick={closeModal}
                   >
-                    {isSaving ? 'સેવ થઈ રહ્યું છે...' : 'નોંધ સેવ કરો'}
+                    <span className="sr-only">બંધ કરો</span>
+                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
                   </button>
                 </div>
+                
+                <div className="p-4">
+                  <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                    <div className="sm:col-span-1">
+                      <dt className="text-sm font-medium text-gray-500">નામ</dt>
+                      <dd className="mt-1 text-sm text-gray-900">{selectedRequest.name}</dd>
+                    </div>
+                    
+                    <div className="sm:col-span-1">
+                      <dt className="text-sm font-medium text-gray-500">સ્ટેટસ</dt>
+                      <dd className="mt-1 text-sm text-gray-900 flex items-center">
+                        {getStatusBadge(selectedRequest.status || 'new')}
+                        {selectedRequest.userType !== 'message' && (
+                          selectedRequest.userType === 'landowner' ? (
+                            <span className="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                              {(selectedRequest as LandRequest).option === 'sell' ? 'વેચાણ' : 'ભાડે'}
+                            </span>
+                          ) : selectedRequest.userType === 'company' ? (
+                            <>
+                              <span className={`ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                (selectedRequest as CompanyRequest).option === 'buy' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+                              }`}>
+                                {(selectedRequest as CompanyRequest).option === 'buy' ? 'ખરીદવા' : 'ભાડે લેવા'}
+                              </span>
+                            </>
+                          ) : null
+                        )}
+                      </dd>
+                    </div>
+                    
+                    {/* Contact information */}
+                    <div className="sm:col-span-1">
+                      <dt className="text-sm font-medium text-gray-500">
+                        {selectedRequest.userType === 'message' ? 'ઇમેઇલ/મોબાઇલ' : 'મોબાઇલ'}
+                      </dt>
+                      <dd className="mt-1 text-sm text-gray-900">
+                        {selectedRequest.userType === 'message' ? 
+                          (selectedRequest as MessageRequest).emailOrMobile : 
+                          (selectedRequest as BaseRequest).mobile
+                        }
+                      </dd>
+                    </div>
+                    
+                    {/* Type-specific details */}
+                    {selectedRequest.userType === 'landowner' ? (
+                      <>
+                        <div className="sm:col-span-1">
+                          <dt className="text-sm font-medium text-gray-500">જમીન</dt>
+                          <dd className="mt-1 text-sm text-gray-900">{(selectedRequest as LandRequest).landSize} એકર</dd>
+                        </div>
+                        
+                        <div className="sm:col-span-1">
+                          <dt className="text-sm font-medium text-gray-500">જિલ્લો</dt>
+                          <dd className="mt-1 text-sm text-gray-900">{(selectedRequest as LandRequest).district}</dd>
+                        </div>
+                        
+                        <div className="sm:col-span-1">
+                          <dt className="text-sm font-medium text-gray-500">તાલુકો</dt>
+                          <dd className="mt-1 text-sm text-gray-900">{(selectedRequest as LandRequest).taluka}</dd>
+                        </div>
+                        
+                        <div className="sm:col-span-1">
+                          <dt className="text-sm font-medium text-gray-500">ગામ</dt>
+                          <dd className="mt-1 text-sm text-gray-900">{(selectedRequest as LandRequest).village}</dd>
+                        </div>
+                        
+                        <div className="sm:col-span-1">
+                          <dt className="text-sm font-medium text-gray-500">સબસ્ટેશન</dt>
+                          <dd className="mt-1 text-sm text-gray-900">{(selectedRequest as LandRequest).substationName}</dd>
+                        </div>
+                        
+                        <div className="sm:col-span-1">
+                          <dt className="text-sm font-medium text-gray-500">સબસ્ટેશનથી અંતર</dt>
+                          <dd className="mt-1 text-sm text-gray-900">{(selectedRequest as LandRequest).substationDistance} કિમી</dd>
+                        </div>
+                        
+                        <div className="sm:col-span-1">
+                          <dt className="text-sm font-medium text-gray-500">દર</dt>
+                          <dd className="mt-1 text-sm text-gray-900">₹{(selectedRequest as LandRequest).rate}</dd>
+                        </div>
+                        
+                        <div className="sm:col-span-1">
+                          <dt className="text-sm font-medium text-gray-500">માલિક છે?</dt>
+                          <dd className="mt-1 text-sm text-gray-900">{(selectedRequest as LandRequest).isOwner === 'yes' ? 'હા' : 'ના (દલાલ)'}</dd>
+                        </div>
+                      </>
+                    ) : selectedRequest.userType === 'company' ? (
+                      <>
+                        <div className="sm:col-span-1">
+                          <dt className="text-sm font-medium text-gray-500">કંપની</dt>
+                          <dd className="mt-1 text-sm text-gray-900">{(selectedRequest as CompanyRequest).companyName}</dd>
+                        </div>
+                        
+                        <div className="sm:col-span-1">
+                          <dt className="text-sm font-medium text-gray-500">ઈમેલ</dt>
+                          <dd className="mt-1 text-sm text-gray-900">{(selectedRequest as CompanyRequest).email}</dd>
+                        </div>
+                        
+                        <div className="sm:col-span-1">
+                          <dt className="text-sm font-medium text-gray-500">જરૂરિયાત</dt>
+                          <dd className="mt-1 text-sm text-gray-900">{(selectedRequest as CompanyRequest).landSize} એકર</dd>
+                        </div>
+                        
+                        <div className="sm:col-span-1">
+                          <dt className="text-sm font-medium text-gray-500">બજેટ</dt>
+                          <dd className="mt-1 text-sm text-gray-900">₹{(selectedRequest as CompanyRequest).budget}</dd>
+                        </div>
+                        
+                        <div className="sm:col-span-1">
+                          <dt className="text-sm font-medium text-gray-500">સમયમર્યાદા</dt>
+                          <dd className="mt-1 text-sm text-gray-900">{(selectedRequest as CompanyRequest).timeline}</dd>
+                        </div>
+                        
+                        <div className="sm:col-span-1">
+                          <dt className="text-sm font-medium text-gray-500">જિલ્લો</dt>
+                          <dd className="mt-1 text-sm text-gray-900">{(selectedRequest as CompanyRequest).district}</dd>
+                        </div>
+                        
+                        <div className="sm:col-span-1">
+                          <dt className="text-sm font-medium text-gray-500">તાલુકો</dt>
+                          <dd className="mt-1 text-sm text-gray-900">{(selectedRequest as CompanyRequest).taluka}</dd>
+                        </div>
+                        
+                        <div className="sm:col-span-2">
+                          <dt className="text-sm font-medium text-gray-500">જરૂરિયાતની વિગતો</dt>
+                          <dd className="mt-1 text-sm text-gray-900">{(selectedRequest as CompanyRequest).requirements}</dd>
+                        </div>
+                      </>
+                    ) : null}
+                  
+                    {/* Message content for message type */}
+                    {selectedRequest.userType === 'message' && (
+                      <div className="sm:col-span-2 mt-4">
+                        <dt className="text-sm font-medium text-gray-500">સંદેશ</dt>
+                        <dd className="mt-1 text-sm text-gray-900 p-3 bg-gray-50 rounded-md">
+                          {(selectedRequest as MessageRequest).message}
+                        </dd>
+                      </div>
+                    )}
+
+                    {/* Timing info for both */}
+                    <div className="sm:col-span-2 mt-4 pt-4 border-t">
+                      <p className="text-sm text-gray-500">
+                        <span className="font-medium">રિક્વેસ્ટ મળી:</span> {selectedRequest.createdAt.toDate().toLocaleString('gu-IN')}
+                      </p>
+                      {selectedRequest.lastUpdated && (
+                        <p className="text-sm text-gray-500 mt-1">
+                          <span className="font-medium">છેલ્લો અપડેટ:</span> {selectedRequest.lastUpdated.toDate().toLocaleString('gu-IN')}
+                        </p>
+                      )}
+                    </div>
+                  
+                    {/* Remarks section */}
+                    <div className="sm:col-span-2 mt-6">
+                      <label htmlFor="remarks" className="block text-sm font-medium text-gray-700">
+                        રિમાર્ક્સ
+                      </label>
+                      <div className="mt-1">
+                        <textarea
+                          id="remarks"
+                          name="remarks"
+                          rows={3}
+                          className="shadow-sm block w-full focus:ring-green-500 focus:border-green-500 sm:text-sm border border-gray-300 rounded-md"
+                          value={remarks}
+                          onChange={(e) => setRemarks(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </dl>
+                </div>
               </div>
-            </div>
-            
-            <div className="bg-gray-50 p-4 sm:px-6 border-t border-gray-200 flex justify-end">
-              <button
-                type="button"
-                onClick={closeModal}
-                className="px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-              >
-                બંધ કરો
-              </button>
+              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button
+                  type="button"
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm"
+                  onClick={saveRemarks}
+                  disabled={isSaving}
+                >
+                  {isSaving ? 'સેવ થઈ રહ્યું છે...' : 'રિમાર્ક્સ સેવ કરો'}
+                </button>
+                <button
+                  type="button"
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                  onClick={closeModal}
+                >
+                  બંધ કરો
+                </button>
+              </div>
             </div>
           </div>
         </div>

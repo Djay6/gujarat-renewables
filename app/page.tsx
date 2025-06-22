@@ -4,7 +4,6 @@ import Header from './components/Header';
 import Benefits from './components/Benefits';
 import LandForm from './components/LandForm';
 import AboutUs from './components/AboutUs';
-import Contact from './components/Contact';
 import Footer from './components/Footer';
 import { useLanguage } from './context/LanguageContext';
 import { translations } from './translations';
@@ -41,37 +40,41 @@ export default function Home() {
         
         <Benefits />
         
-        <section id="form" className="py-20 px-4 relative">
-          {/* Background pattern for form section */}
+        <section id="form" className="section-padding relative">
+          {/* Modern background for form section */}
           <div className="absolute inset-0 z-0">
-            <div className="absolute inset-0 bg-gradient-to-b from-white via-green-50 to-green-100"></div>
-            <div className="absolute inset-0 opacity-5 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgdmlld0JveD0iMCAwIDYwIDYwIj48cGF0aCBkPSJNMzAgMEwzMCA2MEwwIDYwTDAgMEwzMCAwWiIgZmlsbD0iIzEwYjk4MSIvPjwvc3ZnPg==')]"></div>
+            <div className="absolute inset-0 bg-gradient-subtle"></div>
+            {/* Modern subtle pattern instead of vertical columns */}
+            <div className="absolute inset-0">
+              {/* Soft circular elements */}
+              <div className="absolute top-0 left-0 w-96 h-96 bg-green-300 rounded-full opacity-5 blur-3xl transform -translate-x-1/2 -translate-y-1/2"></div>
+              <div className="absolute top-1/4 right-0 w-80 h-80 bg-yellow-300 rounded-full opacity-5 blur-3xl transform translate-x-1/3"></div>
+              <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-green-400 rounded-full opacity-5 blur-3xl transform translate-y-1/3"></div>
+            </div>
           </div>
           
-          <div className="max-w-6xl mx-auto relative z-10">
+          <div className="container-content">
             <div className="text-center mb-12">
-              <div className="inline-block p-2 bg-green-100 rounded-full mb-4">
-                <svg className="w-10 h-10 text-green-600" viewBox="0 0 24 24" fill="currentColor">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-6">
+                <svg className="w-8 h-8 text-green-600" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M10,17L5,12L6.41,10.59L10,14.17L17.59,6.58L19,8L10,17Z" />
                 </svg>
               </div>
-              <h2 className="text-3xl md:text-4xl font-bold text-green-800 mb-4">
+              <h2 className="section-title">
                 {t.forms.common.submitDetails}
               </h2>
-              <p className="text-green-700 mb-2 max-w-2xl mx-auto text-lg">
+              <p className="section-subtitle">
                 {t.forms.common.forBoth}
               </p>
             </div>
             
-            <div className="bg-white rounded-xl shadow-xl overflow-hidden">
+            <div className="card overflow-hidden">
               <LandForm />
             </div>
           </div>
         </section>
         
         <AboutUs />
-        
-        <Contact />
         
         <Footer />
       </main>
