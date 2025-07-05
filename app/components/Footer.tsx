@@ -21,37 +21,23 @@ export default function Footer() {
   const content = {
     gu: {
       contactInfo: "સંપર્ક માહિતી",
-      email: "connect@gujaratrenewables.com",
+      email: "gujaratrenewables@gmail.com",
       formTitle: "સંદેશ મોકલો",
       namePlaceholder: "તમારું નામ",
       emailOrMobilePlaceholder: "તમારું ઇમેઇલ અથવા મોબાઇલ",
       messagePlaceholder: "તમારો સંદેશ લખો...",
       sendButton: "સંદેશ મોકલો",
-      footerLinks: {
-        aboutUs: "આપણા વિશે",
-        landowners: "જમીન માલિકો",
-        solarCompanies: "સોલાર કંપનીઓ",
-        privacyPolicy: "ગોપનીયતા નીતિ",
-        contactUs: "સંપર્ક કરો"
-      },
       copyright: (year: number) => `&copy; ${year} ગુજરાત રિન્યુએબલ્સ. બધા અધિકારો સુરક્ષિત.`,
       bridgeText: "જમીન માલિકો અને સોલાર કંપનીઓ વચ્ચે સેતુ"
     },
     en: {
       contactInfo: "Contact Information",
-      email: "connect@gujaratrenewables.com",
+      email: "gujaratrenewables@gmail.com",
       formTitle: "Send a Message",
       namePlaceholder: "Your Name",
       emailOrMobilePlaceholder: "Your Email or Mobile",
       messagePlaceholder: "Write your message...",
       sendButton: "Send Message",
-      footerLinks: {
-        aboutUs: "About Us",
-        landowners: "Landowners",
-        solarCompanies: "Solar Companies",
-        privacyPolicy: "Privacy Policy",
-        contactUs: "Contact Us"
-      },
       copyright: (year: number) => `&copy; ${year} Gujarat Renewables. All rights reserved.`,
       bridgeText: "Bridging landowners and solar companies"
     }
@@ -181,14 +167,6 @@ export default function Footer() {
         </div>
         
         <div className="border-t border-green-700/50 mt-8 pt-8 text-center">
-          <div className="flex flex-wrap justify-center gap-5 mb-6 text-sm">
-            <Link href="#" className="text-green-300 hover:text-white hover:underline">{t.footerLinks.aboutUs}</Link>
-            <Link href="#landowner-form" className="text-green-300 hover:text-white hover:underline">{t.footerLinks.landowners}</Link>
-            <Link href="#company-form" className="text-green-300 hover:text-white hover:underline">{t.footerLinks.solarCompanies}</Link>
-            <Link href="#" className="text-green-300 hover:text-white hover:underline">{t.footerLinks.privacyPolicy}</Link>
-            <Link href="#" className="text-green-300 hover:text-white hover:underline">{t.footerLinks.contactUs}</Link>
-          </div>
-          
           <p className="text-green-200" dangerouslySetInnerHTML={{ __html: t.copyright(new Date().getFullYear()) }}></p>
           
           <div className="flex justify-center mt-6 gap-4 text-xs text-green-300">
