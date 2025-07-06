@@ -12,14 +12,23 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
-  const [language, setLanguage] = useState<Language>('gu');
+  const [language, setLanguage] = useState<Language>('en');
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Load saved language preference on mount
   useEffect(() => {
-    const savedLanguage = localStorage.getItem('language') as Language;
-    if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'gu')) {
-      setLanguage(savedLanguage);
+    try {
+      // Clear any previously saved language to ensure we start with English
+      localStorage.removeItem('language');
+      
+      // Only use saved language if explicitly set by user after this change
+      const savedLanguage = localStorage.getItem('language') as Language;
+      if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'gu')) {
+        setLanguage(savedLanguage);
+      }
+    } catch (error) {
+      // Handle case where localStorage is not available
+      console.error('Error accessing localStorage:', error);
     }
     setIsLoaded(true);
   }, []);
@@ -27,8 +36,12 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   // Save language preference whenever it changes
   useEffect(() => {
     if (isLoaded) {
-      localStorage.setItem('language', language);
-      document.documentElement.lang = language;
+      try {
+        localStorage.setItem('language', language);
+        document.documentElement.lang = language;
+      } catch (error) {
+        console.error('Error saving to localStorage:', error);
+      }
     }
   }, [language, isLoaded]);
 
