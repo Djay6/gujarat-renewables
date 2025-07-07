@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { collection, getDocs, query, orderBy, doc, updateDoc, where } from 'firebase/firestore';
 import { db } from '../firebase';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface BaseRequest {
   id: string;
@@ -54,6 +56,7 @@ interface MessageRequest {
 type Request = LandRequest | CompanyRequest | MessageRequest;
 
 export default function AdminPage() {
+  const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -73,16 +76,36 @@ export default function AdminPage() {
   // Get unique districts for filtering
   const uniqueDistricts = [...new Set(requests.map(req => 'district' in req ? req.district : ''))].filter(Boolean).sort();
 
+  // Check if user is already logged in
+  useEffect(() => {
+    const isAdmin = localStorage.getItem('isAdmin') === 'true';
+    setIsLoggedIn(isAdmin);
+  }, []);
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     
     // Hardcoded credentials check
     if (email === 'test@test.com' && password === 'Test@123') {
+      // Set login state in localStorage
+      localStorage.setItem('isAdmin', 'true');
       setIsLoggedIn(true);
       setLoginError('');
+      
+      // Check if there's a redirect URL stored
+      const redirectUrl = localStorage.getItem('redirectAfterLogin');
+      if (redirectUrl) {
+        localStorage.removeItem('redirectAfterLogin');
+        router.push(redirectUrl);
+      }
     } else {
       setLoginError('ઈમેલ અથવા પાસવર્ડ ખોટો છે.');
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('isAdmin');
+    setIsLoggedIn(false);
   };
 
   const fetchRequests = async () => {
@@ -382,10 +405,19 @@ export default function AdminPage() {
             ગુજરાત રિન્યુએબલ્સ એડમિન
           </h1>
           <button
-            onClick={() => setIsLoggedIn(false)}
+            onClick={handleLogout}
             className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
           >
             લોગઆઉટ
+          </button>
+        </div>
+        
+        <div className="mb-6 flex justify-end">
+          <button 
+            onClick={() => router.push('/admin/blog')} 
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+          >
+            Manage Blog Posts
           </button>
         </div>
         
@@ -512,10 +544,10 @@ export default function AdminPage() {
                                 {getUserTypeBadge(request.userType)}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-gray-900">
-                                  {request.name}
-                                </div>
-                                <div className="text-sm text-gray-500">
+                                    <div className="text-sm font-medium text-gray-900">
+                                      {request.name}
+                                    </div>
+                                    <div className="text-sm text-gray-500">
                                   {request.userType === 'landowner' ? (
                                     `${(request as LandRequest).village}, ${(request as LandRequest).district}`
                                   ) : request.userType === 'company' ? (
@@ -573,28 +605,28 @@ export default function AdminPage() {
                                 {getStatusBadge(request.status || 'new')}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <button
+                                  <button 
                                   onClick={() => openModal(request)}
                                   className="text-green-600 hover:text-green-900 mr-3"
-                                >
+                                  >
                                   જુઓ
-                                </button>
+                                  </button>
                                 <div className="inline-flex rounded-md shadow-sm mt-1" role="group">
-                                  <button
+                                  <button 
                                     type="button"
                                     onClick={() => updateRequestStatus(request, 'contacted')}
                                     className="px-2 py-1 text-xs font-medium rounded-l-lg border border-gray-200 bg-white text-gray-900 hover:bg-gray-100"
                                   >
                                     સંપર્ક કર્યો
                                   </button>
-                                  <button
+                                  <button 
                                     type="button"
                                     onClick={() => updateRequestStatus(request, 'unavailable')}
                                     className="px-2 py-1 text-xs font-medium border-t border-b border-gray-200 bg-white text-gray-900 hover:bg-gray-100"
                                   >
                                     ઉપલબ્ધ નથી
                                   </button>
-                                  <button
+                                  <button 
                                     type="button"
                                     onClick={() => updateRequestStatus(request, 'spam')}
                                     className="px-2 py-1 text-xs font-medium rounded-r-lg border border-gray-200 bg-white text-gray-900 hover:bg-gray-100"
@@ -628,22 +660,22 @@ export default function AdminPage() {
             
             <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <div className="flex items-center justify-between p-4 border-b">
-                  <h3 className="text-lg font-medium text-gray-900">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-lg font-medium text-gray-900">
                     {selectedRequest.userType === 'landowner' ? 'જમીન માલિકની વિગતો' : selectedRequest.userType === 'company' ? 'કંપનીની વિગતો' : 'સંદેશ'}
-                  </h3>
-                  <button
+              </h3>
+              <button
                     type="button"
-                    className="text-gray-400 hover:text-gray-500"
+                className="text-gray-400 hover:text-gray-500"
                     onClick={closeModal}
-                  >
+              >
                     <span className="sr-only">બંધ કરો</span>
-                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
                 <div className="p-4">
                   <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
                     <div className="sm:col-span-1">
@@ -654,105 +686,105 @@ export default function AdminPage() {
                     <div className="sm:col-span-1">
                       <dt className="text-sm font-medium text-gray-500">સ્ટેટસ</dt>
                       <dd className="mt-1 text-sm text-gray-900 flex items-center">
-                        {getStatusBadge(selectedRequest.status || 'new')}
+                  {getStatusBadge(selectedRequest.status || 'new')}
                         {selectedRequest.userType !== 'message' && (
                           selectedRequest.userType === 'landowner' ? (
                             <span className="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                              {(selectedRequest as LandRequest).option === 'sell' ? 'વેચાણ' : 'ભાડે'}
-                            </span>
+                      {(selectedRequest as LandRequest).option === 'sell' ? 'વેચાણ' : 'ભાડે'}
+                    </span>
                           ) : selectedRequest.userType === 'company' ? (
                             <>
                               <span className={`ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                (selectedRequest as CompanyRequest).option === 'buy' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
-                              }`}>
-                                {(selectedRequest as CompanyRequest).option === 'buy' ? 'ખરીદવા' : 'ભાડે લેવા'}
-                              </span>
+                      (selectedRequest as CompanyRequest).option === 'buy' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+                    }`}>
+                      {(selectedRequest as CompanyRequest).option === 'buy' ? 'ખરીદવા' : 'ભાડે લેવા'}
+                    </span>
                             </>
                           ) : null
-                        )}
+                  )}
                       </dd>
-                    </div>
-                    
+                </div>
+                
                     {/* Contact information */}
-                    <div className="sm:col-span-1">
+                <div className="sm:col-span-1">
                       <dt className="text-sm font-medium text-gray-500">
                         {selectedRequest.userType === 'message' ? 'ઇમેઇલ/મોબાઇલ' : 'મોબાઇલ'}
                       </dt>
-                      <dd className="mt-1 text-sm text-gray-900">
+                  <dd className="mt-1 text-sm text-gray-900">
                         {selectedRequest.userType === 'message' ? 
                           (selectedRequest as MessageRequest).emailOrMobile : 
                           (selectedRequest as BaseRequest).mobile
                         }
-                      </dd>
-                    </div>
-                    
+                  </dd>
+                </div>
+                
                     {/* Type-specific details */}
                     {selectedRequest.userType === 'landowner' ? (
-                      <>
-                        <div className="sm:col-span-1">
+                  <>
+                    <div className="sm:col-span-1">
                           <dt className="text-sm font-medium text-gray-500">જમીન</dt>
                           <dd className="mt-1 text-sm text-gray-900">{(selectedRequest as LandRequest).landSize} એકર</dd>
-                        </div>
-                        
-                        <div className="sm:col-span-1">
-                          <dt className="text-sm font-medium text-gray-500">જિલ્લો</dt>
+                    </div>
+                    
+                <div className="sm:col-span-1">
+                  <dt className="text-sm font-medium text-gray-500">જિલ્લો</dt>
                           <dd className="mt-1 text-sm text-gray-900">{(selectedRequest as LandRequest).district}</dd>
-                        </div>
-                        
-                        <div className="sm:col-span-1">
-                          <dt className="text-sm font-medium text-gray-500">તાલુકો</dt>
+                </div>
+                
+                <div className="sm:col-span-1">
+                  <dt className="text-sm font-medium text-gray-500">તાલુકો</dt>
                           <dd className="mt-1 text-sm text-gray-900">{(selectedRequest as LandRequest).taluka}</dd>
-                        </div>
-                        
-                        <div className="sm:col-span-1">
-                          <dt className="text-sm font-medium text-gray-500">ગામ</dt>
-                          <dd className="mt-1 text-sm text-gray-900">{(selectedRequest as LandRequest).village}</dd>
-                        </div>
-                        
-                        <div className="sm:col-span-1">
+                </div>
+                
+                    <div className="sm:col-span-1">
+                      <dt className="text-sm font-medium text-gray-500">ગામ</dt>
+                      <dd className="mt-1 text-sm text-gray-900">{(selectedRequest as LandRequest).village}</dd>
+                    </div>
+                    
+                    <div className="sm:col-span-1">
                           <dt className="text-sm font-medium text-gray-500">સબસ્ટેશન</dt>
                           <dd className="mt-1 text-sm text-gray-900">{(selectedRequest as LandRequest).substationName}</dd>
-                        </div>
-                        
-                        <div className="sm:col-span-1">
+                    </div>
+                
+                <div className="sm:col-span-1">
                           <dt className="text-sm font-medium text-gray-500">સબસ્ટેશનથી અંતર</dt>
                           <dd className="mt-1 text-sm text-gray-900">{(selectedRequest as LandRequest).substationDistance} કિમી</dd>
-                        </div>
-                        
-                        <div className="sm:col-span-1">
+                </div>
+                
+                    <div className="sm:col-span-1">
                           <dt className="text-sm font-medium text-gray-500">દર</dt>
                           <dd className="mt-1 text-sm text-gray-900">₹{(selectedRequest as LandRequest).rate}</dd>
-                        </div>
-                        
-                        <div className="sm:col-span-1">
+                    </div>
+                    
+                    <div className="sm:col-span-1">
                           <dt className="text-sm font-medium text-gray-500">માલિક છે?</dt>
                           <dd className="mt-1 text-sm text-gray-900">{(selectedRequest as LandRequest).isOwner === 'yes' ? 'હા' : 'ના (દલાલ)'}</dd>
-                        </div>
+                    </div>
                       </>
                     ) : selectedRequest.userType === 'company' ? (
                       <>
-                        <div className="sm:col-span-1">
+                    <div className="sm:col-span-1">
                           <dt className="text-sm font-medium text-gray-500">કંપની</dt>
                           <dd className="mt-1 text-sm text-gray-900">{(selectedRequest as CompanyRequest).companyName}</dd>
-                        </div>
-                        
-                        <div className="sm:col-span-1">
+                    </div>
+                    
+                    <div className="sm:col-span-1">
                           <dt className="text-sm font-medium text-gray-500">ઈમેલ</dt>
                           <dd className="mt-1 text-sm text-gray-900">{(selectedRequest as CompanyRequest).email}</dd>
-                        </div>
+                    </div>
                         
-                        <div className="sm:col-span-1">
+                    <div className="sm:col-span-1">
                           <dt className="text-sm font-medium text-gray-500">જરૂરિયાત</dt>
                           <dd className="mt-1 text-sm text-gray-900">{(selectedRequest as CompanyRequest).landSize} એકર</dd>
-                        </div>
-                        
-                        <div className="sm:col-span-1">
-                          <dt className="text-sm font-medium text-gray-500">બજેટ</dt>
+                    </div>
+                    
+                    <div className="sm:col-span-1">
+                      <dt className="text-sm font-medium text-gray-500">બજેટ</dt>
                           <dd className="mt-1 text-sm text-gray-900">₹{(selectedRequest as CompanyRequest).budget}</dd>
-                        </div>
-                        
-                        <div className="sm:col-span-1">
-                          <dt className="text-sm font-medium text-gray-500">સમયમર્યાદા</dt>
+                    </div>
+                    
+                    <div className="sm:col-span-1">
+                      <dt className="text-sm font-medium text-gray-500">સમયમર્યાદા</dt>
                           <dd className="mt-1 text-sm text-gray-900">{(selectedRequest as CompanyRequest).timeline}</dd>
                         </div>
                         
@@ -764,13 +796,13 @@ export default function AdminPage() {
                         <div className="sm:col-span-1">
                           <dt className="text-sm font-medium text-gray-500">તાલુકો</dt>
                           <dd className="mt-1 text-sm text-gray-900">{(selectedRequest as CompanyRequest).taluka}</dd>
-                        </div>
-                        
-                        <div className="sm:col-span-2">
+                    </div>
+                    
+                    <div className="sm:col-span-2">
                           <dt className="text-sm font-medium text-gray-500">જરૂરિયાતની વિગતો</dt>
                           <dd className="mt-1 text-sm text-gray-900">{(selectedRequest as CompanyRequest).requirements}</dd>
-                        </div>
-                      </>
+                    </div>
+                  </>
                     ) : null}
                   
                     {/* Message content for message type */}
@@ -779,8 +811,8 @@ export default function AdminPage() {
                         <dt className="text-sm font-medium text-gray-500">સંદેશ</dt>
                         <dd className="mt-1 text-sm text-gray-900 p-3 bg-gray-50 rounded-md">
                           {(selectedRequest as MessageRequest).message}
-                        </dd>
-                      </div>
+                  </dd>
+                </div>
                     )}
 
                     {/* Timing info for both */}
@@ -788,7 +820,7 @@ export default function AdminPage() {
                       <p className="text-sm text-gray-500">
                         <span className="font-medium">રિક્વેસ્ટ મળી:</span> {selectedRequest.createdAt.toDate().toLocaleString('gu-IN')}
                       </p>
-                      {selectedRequest.lastUpdated && (
+                {selectedRequest.lastUpdated && (
                         <p className="text-sm text-gray-500 mt-1">
                           <span className="font-medium">છેલ્લો અપડેટ:</span> {selectedRequest.lastUpdated.toDate().toLocaleString('gu-IN')}
                         </p>
@@ -799,15 +831,15 @@ export default function AdminPage() {
                     <div className="sm:col-span-2 mt-6">
                       <label htmlFor="remarks" className="block text-sm font-medium text-gray-700">
                         રિમાર્ક્સ
-                      </label>
+                </label>
                       <div className="mt-1">
-                        <textarea
-                          id="remarks"
-                          name="remarks"
+                <textarea
+                  id="remarks"
+                  name="remarks"
                           rows={3}
                           className="shadow-sm block w-full focus:ring-green-500 focus:border-green-500 sm:text-sm border border-gray-300 rounded-md"
-                          value={remarks}
-                          onChange={(e) => setRemarks(e.target.value)}
+                  value={remarks}
+                  onChange={(e) => setRemarks(e.target.value)}
                         />
                       </div>
                     </div>
@@ -815,21 +847,21 @@ export default function AdminPage() {
                 </div>
               </div>
               <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button
-                  type="button"
+                  <button
+                    type="button"
                   className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm"
-                  onClick={saveRemarks}
-                  disabled={isSaving}
-                >
+                    onClick={saveRemarks}
+                    disabled={isSaving}
+                  >
                   {isSaving ? 'સેવ થઈ રહ્યું છે...' : 'રિમાર્ક્સ સેવ કરો'}
-                </button>
-                <button
-                  type="button"
+                  </button>
+              <button
+                type="button"
                   className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                  onClick={closeModal}
-                >
-                  બંધ કરો
-                </button>
+                onClick={closeModal}
+              >
+                બંધ કરો
+              </button>
               </div>
             </div>
           </div>

@@ -12,6 +12,7 @@ export type TranslationSchema = {
     about: string;
     services: string;
     contact: string;
+    blog: string;
   };
   common: {
     submitButton: string;
@@ -123,6 +124,7 @@ export const translations: Record<Language, TranslationSchema> = {
       about: "અમારા વિશે",
       services: "સેવાઓ",
       contact: "સંપર્ક",
+      blog: "બ્લોગ",
     },
     common: {
       submitButton: "સબમિટ કરો",
@@ -232,6 +234,7 @@ export const translations: Record<Language, TranslationSchema> = {
       about: "About",
       services: "Services",
       contact: "Contact",
+      blog: "Blog",
     },
     common: {
       submitButton: "Submit",

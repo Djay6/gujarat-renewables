@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { hindVadodara } from './fonts';
 import "./globals.css";
 import { LanguageProvider } from './context/LanguageContext';
+import Navigation from './components/Navigation';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://gujaratrenewables.com'),
@@ -60,6 +61,7 @@ export default function RootLayout({
       </head>
       <body className={`font-sans ${hindVadodara.className} overflow-x-hidden bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800`}>
         <LanguageProvider>
+          <Navigation />
           {children}
         </LanguageProvider>
       </body>
