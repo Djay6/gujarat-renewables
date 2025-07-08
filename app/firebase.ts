@@ -1,5 +1,5 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import { getFirestore, Firestore } from 'firebase/firestore';
+import { getFirestore, Firestore, connectFirestoreEmulator } from 'firebase/firestore';
 
 // Your Firebase configuration
 // Replace these with your actual Firebase project configuration
@@ -16,24 +16,50 @@ const firebaseConfig = {
 let app: FirebaseApp;
 let db: Firestore;
 
-// Check if Firebase is already initialized
-if (!getApps().length) {
-  app = initializeApp(firebaseConfig);
-} else {
-  app = getApps()[0]; // Use existing app if available
-}
+// Check if we're in a browser environment to avoid SSR issues
+const isBrowser = typeof window !== 'undefined';
 
-// Initialize Firestore with settings optimized for production
-db = getFirestore(app);
+try {
+  // Check if Firebase is already initialized
+  if (!getApps().length) {
+    app = initializeApp(firebaseConfig);
+  } else {
+    app = getApps()[0]; // Use existing app if available
+  }
 
-// Enable offline persistence for better performance
-if (typeof window !== 'undefined') {
-  // Only run in browser environment
-  import('firebase/firestore').then(({ enableIndexedDbPersistence }) => {
-    enableIndexedDbPersistence(db).catch((err) => {
-      console.error('Firestore persistence error:', err.code);
+  // Initialize Firestore with settings optimized for production
+  db = getFirestore(app);
+
+  // Enable offline persistence only in browser environment
+  if (isBrowser) {
+    // Only run in browser environment
+    import('firebase/firestore').then(({ enableIndexedDbPersistence }) => {
+      // Don't attempt persistence if project ID is missing
+      if (process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
+        enableIndexedDbPersistence(db).catch((err) => {
+          if (err.code === 'failed-precondition') {
+            console.warn('Firestore persistence failed: Multiple tabs open');
+          } else if (err.code === 'unimplemented') {
+            console.warn('Firestore persistence not supported by browser');
+          } else {
+            console.error('Firestore persistence error:', err.code);
+          }
+        });
+      } else {
+        console.warn('Firebase project ID is missing - persistence disabled');
+      }
     });
-  });
+  }
+} catch (error) {
+  console.error('Firebase initialization error:', error);
+  // Provide fallback for SSR
+  if (!isBrowser) {
+    // @ts-ignore - Create minimal implementations for SSR context
+    app = {} as FirebaseApp;
+    // @ts-ignore
+    db = {} as Firestore;
+  }
 }
 
+// Export the Firebase services
 export { db }; 
