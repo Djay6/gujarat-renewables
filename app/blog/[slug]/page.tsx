@@ -55,8 +55,6 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
     setError(null);
     
     try {
-      console.log('Fetching blog with slug:', decodedSlug);
-      
       // First try to find the blog in the current language
       let q = query(
         collection(db, 'blogs'),
@@ -66,11 +64,9 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
       );
       
       let snapshot = await getDocs(q);
-      console.log('Query returned', snapshot.size, 'blogs');
       
       // If not found in current language, try any language
       if (snapshot.empty) {
-        console.log('Blog not found in current language, trying any language');
         q = query(
           collection(db, 'blogs'),
           where('slug', '==', decodedSlug),
@@ -79,7 +75,6 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
         );
         
         snapshot = await getDocs(q);
-        console.log('Second query returned', snapshot.size, 'blogs');
       }
       
       if (snapshot.empty) {
@@ -90,7 +85,6 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
       
       const blogDoc = snapshot.docs[0];
       const blogData = blogDoc.data();
-      console.log('Found blog:', blogData);
       
       setBlog({
         id: blogDoc.id,

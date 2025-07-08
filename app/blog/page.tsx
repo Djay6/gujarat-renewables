@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, query, where, limit } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Blog } from '../models/Blog';
 import Link from 'next/link';
@@ -46,11 +46,13 @@ export default function BlogPage() {
   const fetchBlogs = async () => {
     setIsLoading(true);
     try {
-      // Query for published blogs only
+      // Limit the initial query to improve performance
       const q = query(
         collection(db, 'blogs'),
         where('isPublished', '==', true),
-        where('language', '==', language)
+        where('language', '==', language),
+        // Add a limit to reduce initial load time
+        limit(6)
       );
       
       const snapshot = await getDocs(q);
@@ -89,13 +91,6 @@ export default function BlogPage() {
   const filteredBlogs = selectedTag
     ? blogs.filter(blog => blog.tags?.includes(selectedTag))
     : blogs;
-    
-  // Log blog slugs for debugging
-  console.log('Blog slugs:', filteredBlogs.map(blog => ({ 
-    slug: blog.slug, 
-    title: blog.title,
-    language: blog.language
-  })));
 
   return (
     <div className="container-content py-12">

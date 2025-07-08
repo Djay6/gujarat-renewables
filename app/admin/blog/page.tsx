@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, Timestamp, limit } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Blog, BlogFormData } from '../../models/Blog';
 import Link from 'next/link';
@@ -67,7 +67,12 @@ export default function BlogAdmin() {
   const fetchBlogs = async () => {
     setIsLoading(true);
     try {
-      const q = query(collection(db, 'blogs'), orderBy('createdAt', 'desc'));
+      // Limit initial fetch to improve performance
+      const q = query(
+        collection(db, 'blogs'), 
+        orderBy('createdAt', 'desc'),
+        limit(10)
+      );
       const snapshot = await getDocs(q);
       const blogList: Blog[] = [];
       
@@ -197,7 +202,6 @@ export default function BlogAdmin() {
       
       if (isEditing && currentBlogId) {
         // Update existing blog
-        console.log('Updating blog with data:', blogData);
         await updateDoc(doc(db, 'blogs', currentBlogId), blogData);
       } else {
         // Create new blog
@@ -206,7 +210,6 @@ export default function BlogAdmin() {
           createdAt: now
         };
         
-        console.log('Creating new blog with data:', newBlogData);
         await addDoc(collection(db, 'blogs'), newBlogData);
       }
       
