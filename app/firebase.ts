@@ -1,8 +1,7 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import { getFirestore, Firestore, connectFirestoreEmulator } from 'firebase/firestore';
+import { getFirestore, Firestore, FirestoreSettings } from 'firebase/firestore';
 
 // Your Firebase configuration
-// Replace these with your actual Firebase project configuration
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -11,6 +10,11 @@ const firebaseConfig = {
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
+
+// Check for missing project ID
+if (!firebaseConfig.projectId) {
+  console.error('CRITICAL: Firebase project ID is missing in environment variables');
+}
 
 // Initialize Firebase only once
 let app: FirebaseApp;
@@ -27,27 +31,23 @@ try {
     app = getApps()[0]; // Use existing app if available
   }
 
-  // Initialize Firestore with settings optimized for production
+  // Initialize Firestore with optimized settings for production
   db = getFirestore(app);
-
-  // Enable offline persistence only in browser environment
+  
+  // Configure Firestore settings for better performance
   if (isBrowser) {
-    // Only run in browser environment
-    import('firebase/firestore').then(({ enableIndexedDbPersistence }) => {
-      // Don't attempt persistence if project ID is missing
-      if (process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
-        enableIndexedDbPersistence(db).catch((err) => {
-          if (err.code === 'failed-precondition') {
-            console.warn('Firestore persistence failed: Multiple tabs open');
-          } else if (err.code === 'unimplemented') {
-            console.warn('Firestore persistence not supported by browser');
-          } else {
-            console.error('Firestore persistence error:', err.code);
-          }
-        });
-      } else {
-        console.warn('Firebase project ID is missing - persistence disabled');
-      }
+    // Disable persistence completely in production to avoid the slow initial load
+    const settings: FirestoreSettings = {
+      // Use memory cache only (no persistence)
+      cacheSizeBytes: 1048576 * 10, // 10 MB cache
+    };
+    
+    // Apply settings to Firestore
+    import('firebase/firestore').then(({ initializeFirestore }) => {
+      // Re-initialize with optimized settings
+      db = initializeFirestore(app, settings);
+    }).catch(err => {
+      console.error('Failed to initialize Firestore with optimized settings:', err);
     });
   }
 } catch (error) {

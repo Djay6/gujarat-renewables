@@ -7,11 +7,13 @@ import { Blog } from '../models/Blog';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '../context/LanguageContext';
+import CheckFirebaseConfig from './check-firebase';
 
 export default function BlogPage() {
   const { language } = useLanguage();
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   
   // Content translations
@@ -24,6 +26,8 @@ export default function BlogPage() {
       allTags: "બધા",
       publishedOn: "પ્રકાશિત:",
       by: "દ્વારા:",
+      error: "બ્લોગ લોડ કરવામાં ભૂલ આવી છે. કૃપા કરી થોડી વાર પછી ફરી પ્રયાસ કરો.",
+      loading: "બ્લોગ લોડ થઈ રહ્યા છે..."
     },
     en: {
       title: "Blog",
@@ -33,6 +37,8 @@ export default function BlogPage() {
       allTags: "All",
       publishedOn: "Published on:",
       by: "By:",
+      error: "Error loading blogs. Please try again later.",
+      loading: "Loading blogs..."
     }
   };
 
@@ -45,12 +51,20 @@ export default function BlogPage() {
 
   const fetchBlogs = async () => {
     setIsLoading(true);
+    setError(null);
+    
     try {
+      // Check if Firebase is properly configured
+      if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
+        throw new Error('Firebase configuration is incomplete');
+      }
+      
       // Limit the initial query to improve performance
       const q = query(
         collection(db, 'blogs'),
         where('isPublished', '==', true),
-        where('language', '==', language),
+        // Only filter by language if we have blogs in both languages
+        ...(language ? [where('language', '==', language)] : []),
         // Add a limit to reduce initial load time
         limit(6)
       );
@@ -60,12 +74,14 @@ export default function BlogPage() {
       
       snapshot.forEach((doc) => {
         const data = doc.data();
+        const publishedDate = data.publishedAt?.toDate() || data.createdAt?.toDate() || new Date();
+        
         blogList.push({
           id: doc.id,
           ...data,
-          publishedAt: data.publishedAt?.toDate() || data.createdAt?.toDate(),
-          createdAt: data.createdAt?.toDate(),
-          updatedAt: data.updatedAt?.toDate()
+          publishedAt: publishedDate,
+          createdAt: data.createdAt?.toDate() || new Date(),
+          updatedAt: data.updatedAt?.toDate() || new Date()
         } as Blog);
       });
       
@@ -79,6 +95,7 @@ export default function BlogPage() {
       setBlogs(blogList);
     } catch (error) {
       console.error('Error fetching blogs:', error);
+      setError(t.error);
     } finally {
       setIsLoading(false);
     }
@@ -94,6 +111,9 @@ export default function BlogPage() {
 
   return (
     <div className="container-content py-12">
+      {/* Include the Firebase config checker */}
+      <CheckFirebaseConfig />
+      
       <div className="text-center mb-12">
         <h1 className="text-3xl md:text-4xl font-bold mb-4">{t.title}</h1>
         <p className="text-gray-600 max-w-2xl mx-auto">{t.subtitle}</p>
@@ -129,9 +149,12 @@ export default function BlogPage() {
       )}
 
       {isLoading ? (
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500 mb-4"></div>
+          <p className="text-gray-500">{t.loading}</p>
         </div>
+      ) : error ? (
+        <div className="text-center py-12 text-red-500">{error}</div>
       ) : filteredBlogs.length === 0 ? (
         <div className="text-center py-12 text-gray-500">{t.noBlogs}</div>
       ) : (

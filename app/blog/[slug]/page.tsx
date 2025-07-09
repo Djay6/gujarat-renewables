@@ -8,6 +8,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useLanguage } from '../../context/LanguageContext';
 import ReactMarkdown from 'react-markdown';
+import CheckFirebaseConfig from '../check-firebase';
 
 interface BlogPostPageProps {
   params: {
@@ -32,6 +33,7 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
       publishedOn: "પ્રકાશિત:",
       by: "દ્વારા:",
       error: "બ્લોગ લોડ કરવામાં ભૂલ આવી. કૃપા કરીને પછીથી ફરી પ્રયાસ કરો.",
+      configError: "સિસ્ટમ કન્ફિગરેશન ભૂલ. કૃપા કરીને એડમિનનો સંપર્ક કરો.",
     },
     en: {
       notFound: "Blog post not found.",
@@ -40,6 +42,7 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
       publishedOn: "Published on:",
       by: "By:",
       error: "Error loading blog. Please try again later.",
+      configError: "System configuration error. Please contact admin.",
     }
   };
 
@@ -55,27 +58,21 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
     setError(null);
     
     try {
-      // First try to find the blog in the current language
-      let q = query(
+      // Check if Firebase is properly configured
+      if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
+        setError(t.configError);
+        return;
+      }
+      
+      // Query for the blog post with the given slug
+      const q = query(
         collection(db, 'blogs'),
         where('slug', '==', decodedSlug),
         where('isPublished', '==', true),
         limit(1)
       );
       
-      let snapshot = await getDocs(q);
-      
-      // If not found in current language, try any language
-      if (snapshot.empty) {
-        q = query(
-          collection(db, 'blogs'),
-          where('slug', '==', decodedSlug),
-          where('isPublished', '==', true),
-          limit(1)
-        );
-        
-        snapshot = await getDocs(q);
-      }
+      const snapshot = await getDocs(q);
       
       if (snapshot.empty) {
         setError(t.notFound);
@@ -86,12 +83,17 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
       const blogDoc = snapshot.docs[0];
       const blogData = blogDoc.data();
       
+      // Ensure dates are properly handled
+      const publishedDate = blogData.publishedAt?.toDate() || 
+                           blogData.createdAt?.toDate() || 
+                           new Date();
+                           
       setBlog({
         id: blogDoc.id,
         ...blogData,
-        publishedAt: blogData.publishedAt?.toDate() || blogData.createdAt?.toDate(),
-        createdAt: blogData.createdAt?.toDate(),
-        updatedAt: blogData.updatedAt?.toDate()
+        publishedAt: publishedDate,
+        createdAt: blogData.createdAt?.toDate() || new Date(),
+        updatedAt: blogData.updatedAt?.toDate() || new Date()
       } as Blog);
       
     } catch (err) {
@@ -105,10 +107,11 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
   if (isLoading) {
     return (
       <div className="container-content py-12">
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+        <CheckFirebaseConfig />
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500 mb-4"></div>
+          <p className="text-center text-gray-500">{t.loading}</p>
         </div>
-        <p className="text-center text-gray-500">{t.loading}</p>
       </div>
     );
   }
@@ -116,6 +119,7 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
   if (error || !blog) {
     return (
       <div className="container-content py-12">
+        <CheckFirebaseConfig />
         <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
           <p className="text-red-600 mb-4">{error}</p>
           <Link href="/blog" className="text-green-600 hover:text-green-700 font-medium">
@@ -128,6 +132,7 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
 
   return (
     <div className="container-content py-12">
+      <CheckFirebaseConfig />
       <div className="max-w-4xl mx-auto">
         {/* Back button */}
         <Link href="/blog" className="inline-flex items-center text-green-600 hover:text-green-700 mb-8">
