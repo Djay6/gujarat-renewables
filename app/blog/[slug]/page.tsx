@@ -32,7 +32,6 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
       backToBlogs: "બ્લોગ્સ પર પાછા જાઓ",
       publishedOn: "પ્રકાશિત:",
       by: "દ્વારા:",
-      tags: "ટેગ્સ:",
       notFound: "બ્લોગ પોસ્ટ મળી નથી.",
       error: "બ્લોગ લોડ કરવામાં ભૂલ આવી છે. કૃપા કરી થોડી વાર પછી ફરી પ્રયાસ કરો.",
       loading: "બ્લોગ લોડ થઈ રહ્યું છે...",
@@ -42,7 +41,6 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
       backToBlogs: "Back to Blogs",
       publishedOn: "Published on:",
       by: "By:",
-      tags: "Tags:",
       notFound: "Blog post not found.",
       error: "Error loading blog. Please try again later.",
       loading: "Loading blog...",
@@ -119,7 +117,7 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
   // Show Firebase error fallback if there's a Firebase-specific error
   if (error && error === t.configError) {
     return (
-      <div className="container-content py-12">
+      <div className="container-content py-12 px-4">
         <CheckFirebaseConfig />
         <FirebaseErrorFallback onRetry={fetchBlog} />
       </div>
@@ -128,7 +126,7 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
 
   if (isLoading) {
     return (
-      <div className="container-content py-12">
+      <div className="container-content py-12 px-4">
         <CheckFirebaseConfig />
         <div className="flex flex-col items-center justify-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500 mb-4"></div>
@@ -140,7 +138,7 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
 
   if (error) {
     return (
-      <div className="container-content py-12">
+      <div className="container-content py-12 px-4">
         <div className="text-center py-12">
           <p className="text-red-500 mb-4">{error}</p>
           <Link href="/blog" className="text-green-600 hover:text-green-800">
@@ -153,7 +151,7 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
 
   if (!blog) {
     return (
-      <div className="container-content py-12">
+      <div className="container-content py-12 px-4">
         <div className="text-center py-12">
           <p className="text-red-500 mb-4">{t.notFound}</p>
           <Link href="/blog" className="text-green-600 hover:text-green-800">
@@ -165,7 +163,7 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
   }
 
   return (
-    <div className="container-content py-12">
+    <div className="container-content py-12 px-4">
       <CheckFirebaseConfig />
       <div className="max-w-4xl mx-auto">
         {/* Back button */}
@@ -194,21 +192,6 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
             <span>{t.by} {blog.author}</span>
           </div>
         </div>
-        
-        {/* Tags */}
-        {blog.tags && blog.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-8">
-            {blog.tags.map(tag => (
-              <Link 
-                href={`/blog?tag=${tag}`} 
-                key={tag}
-                className="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full hover:bg-green-200"
-              >
-                {tag}
-              </Link>
-            ))}
-          </div>
-        )}
         
         {/* Cover image */}
         <div className="relative h-80 md:h-96 mb-8 rounded-xl overflow-hidden">

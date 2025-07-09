@@ -15,7 +15,6 @@ export default function BlogPage() {
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
   
   // Content translations
   const content = {
@@ -24,7 +23,6 @@ export default function BlogPage() {
       subtitle: "સૌર ઊર્જા અને અક્ષય ઊર્જા વિશે નવીનતમ અપડેટ્સ અને જાણકારી",
       noBlogs: "કોઈ બ્લોગ પોસ્ટ મળી નથી.",
       readMore: "વધુ વાંચો",
-      allTags: "બધા",
       publishedOn: "પ્રકાશિત:",
       by: "દ્વારા:",
       error: "બ્લોગ લોડ કરવામાં ભૂલ આવી છે. કૃપા કરી થોડી વાર પછી ફરી પ્રયાસ કરો.",
@@ -36,7 +34,6 @@ export default function BlogPage() {
       subtitle: "Latest updates and information about solar energy and renewables",
       noBlogs: "No blog posts found.",
       readMore: "Read More",
-      allTags: "All",
       publishedOn: "Published on:",
       by: "By:",
       error: "Error loading blogs. Please try again later.",
@@ -117,18 +114,10 @@ export default function BlogPage() {
     }
   };
 
-  // Get all unique tags
-  const allTags = Array.from(new Set(blogs.flatMap(blog => blog.tags || [])));
-
-  // Filter blogs by tag if selected
-  const filteredBlogs = selectedTag
-    ? blogs.filter(blog => blog.tags?.includes(selectedTag))
-    : blogs;
-
   // Show Firebase error fallback if there's a Firebase-specific error
   if (error && error === t.configError) {
     return (
-      <div className="container-content py-12">
+      <div className="container-content py-12 px-4">
         <CheckFirebaseConfig />
         <FirebaseErrorFallback onRetry={fetchBlogs} />
       </div>
@@ -137,7 +126,7 @@ export default function BlogPage() {
 
   if (isLoading) {
     return (
-      <div className="container-content py-12">
+      <div className="container-content py-12 px-4">
         <CheckFirebaseConfig />
         <div className="flex flex-col items-center justify-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500 mb-4"></div>
@@ -148,7 +137,7 @@ export default function BlogPage() {
   }
 
   return (
-    <div className="container-content py-12">
+    <div className="container-content py-12 px-4">
       {/* Include the Firebase config checker */}
       <CheckFirebaseConfig />
       
@@ -157,40 +146,11 @@ export default function BlogPage() {
         <p className="text-gray-600 max-w-2xl mx-auto">{t.subtitle}</p>
       </div>
 
-      {/* Tags filter */}
-      {allTags.length > 0 && (
-        <div className="flex flex-wrap justify-center gap-2 mb-8">
-          <button
-            onClick={() => setSelectedTag(null)}
-            className={`px-4 py-1 rounded-full text-sm ${
-              selectedTag === null
-                ? 'bg-green-600 text-white'
-                : 'bg-gray-100 hover:bg-gray-200 text-gray-800'
-            }`}
-          >
-            {t.allTags}
-          </button>
-          {allTags.map(tag => (
-            <button
-              key={tag}
-              onClick={() => setSelectedTag(tag)}
-              className={`px-4 py-1 rounded-full text-sm ${
-                selectedTag === tag
-                  ? 'bg-green-600 text-white'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-800'
-              }`}
-            >
-              {tag}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {filteredBlogs.length === 0 ? (
+      {blogs.length === 0 ? (
         <div className="text-center py-12 text-gray-500">{t.noBlogs}</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredBlogs.map(blog => (
+          {blogs.map(blog => (
             <Link href={`/blog/${encodeURIComponent(blog.slug)}`} key={blog.id}>
               <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full flex flex-col">
                 <div className="relative h-48">
@@ -207,17 +167,6 @@ export default function BlogPage() {
                   <p className="text-gray-600 mb-4 flex-grow">{blog.excerpt}</p>
                   
                   <div className="mt-auto">
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {blog.tags?.map(tag => (
-                        <span 
-                          key={tag} 
-                          className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                    
                     <div className="flex justify-between items-center text-sm text-gray-500">
                       <div>
                         <span>{t.publishedOn} </span>
