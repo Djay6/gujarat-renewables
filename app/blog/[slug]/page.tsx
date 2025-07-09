@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { useLanguage } from '../../context/LanguageContext';
 import ReactMarkdown from 'react-markdown';
 import CheckFirebaseConfig from '../check-firebase';
+import FirebaseErrorFallback from '../../components/FirebaseErrorFallback';
 
 interface BlogPostPageProps {
   params: {
@@ -17,32 +18,35 @@ interface BlogPostPageProps {
 }
 
 export default function BlogPostPage({ params }: BlogPostPageProps) {
-  // Decode the URL-encoded slug
-  const decodedSlug = decodeURIComponent(params.slug);
   const { language } = useLanguage();
   const [blog, setBlog] = useState<Blog | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
+  // Decode the URL-encoded slug
+  const decodedSlug = decodeURIComponent(params.slug);
+  
   // Content translations
   const content = {
     gu: {
-      notFound: "બ્લોગ પોસ્ટ મળી નથી.",
-      loading: "બ્લોગ લોડ થઈ રહ્યું છે...",
       backToBlogs: "બ્લોગ્સ પર પાછા જાઓ",
       publishedOn: "પ્રકાશિત:",
       by: "દ્વારા:",
-      error: "બ્લોગ લોડ કરવામાં ભૂલ આવી. કૃપા કરીને પછીથી ફરી પ્રયાસ કરો.",
-      configError: "સિસ્ટમ કન્ફિગરેશન ભૂલ. કૃપા કરીને એડમિનનો સંપર્ક કરો.",
+      tags: "ટેગ્સ:",
+      notFound: "બ્લોગ પોસ્ટ મળી નથી.",
+      error: "બ્લોગ લોડ કરવામાં ભૂલ આવી છે. કૃપા કરી થોડી વાર પછી ફરી પ્રયાસ કરો.",
+      loading: "બ્લોગ લોડ થઈ રહ્યું છે...",
+      configError: "ફાયરબેઝ કન્ફિગરેશન ભૂલ. અમે આ સમસ્યા પર કામ કરી રહ્યા છીએ."
     },
     en: {
-      notFound: "Blog post not found.",
-      loading: "Loading blog...",
       backToBlogs: "Back to Blogs",
       publishedOn: "Published on:",
       by: "By:",
+      tags: "Tags:",
+      notFound: "Blog post not found.",
       error: "Error loading blog. Please try again later.",
-      configError: "System configuration error. Please contact admin.",
+      loading: "Loading blog...",
+      configError: "Firebase configuration error. We're working on this issue."
     }
   };
 
@@ -60,8 +64,7 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
     try {
       // Check if Firebase is properly configured
       if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
-        setError(t.configError);
-        return;
+        console.warn('Using fallback Firebase configuration');
       }
       
       // Query for the blog post with the given slug
@@ -72,7 +75,10 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
         limit(1)
       );
       
-      const snapshot = await getDocs(q);
+      const snapshot = await getDocs(q).catch(err => {
+        console.error('Error in getDocs:', err);
+        throw new Error(`Firebase query error: ${err.message}`);
+      });
       
       if (snapshot.empty) {
         setError(t.notFound);
@@ -98,11 +104,27 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
       
     } catch (err) {
       console.error('Error fetching blog:', err);
-      setError(t.error);
+      // Check for specific Firebase errors
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      if (errorMessage.includes('Firebase') || errorMessage.includes('firestore')) {
+        setError(t.configError);
+      } else {
+        setError(t.error);
+      }
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Show Firebase error fallback if there's a Firebase-specific error
+  if (error && error === t.configError) {
+    return (
+      <div className="container-content py-12">
+        <CheckFirebaseConfig />
+        <FirebaseErrorFallback onRetry={fetchBlog} />
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -116,13 +138,25 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
     );
   }
 
-  if (error || !blog) {
+  if (error) {
     return (
       <div className="container-content py-12">
-        <CheckFirebaseConfig />
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-          <p className="text-red-600 mb-4">{error}</p>
-          <Link href="/blog" className="text-green-600 hover:text-green-700 font-medium">
+        <div className="text-center py-12">
+          <p className="text-red-500 mb-4">{error}</p>
+          <Link href="/blog" className="text-green-600 hover:text-green-800">
+            {t.backToBlogs}
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!blog) {
+    return (
+      <div className="container-content py-12">
+        <div className="text-center py-12">
+          <p className="text-red-500 mb-4">{t.notFound}</p>
+          <Link href="/blog" className="text-green-600 hover:text-green-800">
             {t.backToBlogs}
           </Link>
         </div>

@@ -8,6 +8,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '../context/LanguageContext';
 import CheckFirebaseConfig from './check-firebase';
+import FirebaseErrorFallback from '../components/FirebaseErrorFallback';
 
 export default function BlogPage() {
   const { language } = useLanguage();
@@ -27,7 +28,8 @@ export default function BlogPage() {
       publishedOn: "પ્રકાશિત:",
       by: "દ્વારા:",
       error: "બ્લોગ લોડ કરવામાં ભૂલ આવી છે. કૃપા કરી થોડી વાર પછી ફરી પ્રયાસ કરો.",
-      loading: "બ્લોગ લોડ થઈ રહ્યા છે..."
+      loading: "બ્લોગ લોડ થઈ રહ્યા છે...",
+      configError: "ફાયરબેઝ કન્ફિગરેશન ભૂલ. અમે આ સમસ્યા પર કામ કરી રહ્યા છીએ."
     },
     en: {
       title: "Blog",
@@ -38,7 +40,8 @@ export default function BlogPage() {
       publishedOn: "Published on:",
       by: "By:",
       error: "Error loading blogs. Please try again later.",
-      loading: "Loading blogs..."
+      loading: "Loading blogs...",
+      configError: "Firebase configuration error. We're working on this issue."
     }
   };
 
@@ -54,9 +57,12 @@ export default function BlogPage() {
     setError(null);
     
     try {
+      // Add the diagnostic component to check Firebase configuration
+      // This will log details to the console for debugging
+      
       // Check if Firebase is properly configured
       if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
-        throw new Error('Firebase configuration is incomplete');
+        console.warn('Using fallback Firebase configuration');
       }
       
       // Limit the initial query to improve performance
@@ -69,7 +75,11 @@ export default function BlogPage() {
         limit(6)
       );
       
-      const snapshot = await getDocs(q);
+      const snapshot = await getDocs(q).catch(err => {
+        console.error('Error in getDocs:', err);
+        throw new Error(`Firebase query error: ${err.message}`);
+      });
+      
       const blogList: Blog[] = [];
       
       snapshot.forEach((doc) => {
@@ -95,7 +105,13 @@ export default function BlogPage() {
       setBlogs(blogList);
     } catch (error) {
       console.error('Error fetching blogs:', error);
-      setError(t.error);
+      // Check for specific Firebase errors
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('Firebase') || errorMessage.includes('firestore')) {
+        setError(t.configError);
+      } else {
+        setError(t.error);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -108,6 +124,28 @@ export default function BlogPage() {
   const filteredBlogs = selectedTag
     ? blogs.filter(blog => blog.tags?.includes(selectedTag))
     : blogs;
+
+  // Show Firebase error fallback if there's a Firebase-specific error
+  if (error && error === t.configError) {
+    return (
+      <div className="container-content py-12">
+        <CheckFirebaseConfig />
+        <FirebaseErrorFallback onRetry={fetchBlogs} />
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="container-content py-12">
+        <CheckFirebaseConfig />
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500 mb-4"></div>
+          <p className="text-center text-gray-500">{t.loading}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container-content py-12">
@@ -148,14 +186,7 @@ export default function BlogPage() {
         </div>
       )}
 
-      {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500 mb-4"></div>
-          <p className="text-gray-500">{t.loading}</p>
-        </div>
-      ) : error ? (
-        <div className="text-center py-12 text-red-500">{error}</div>
-      ) : filteredBlogs.length === 0 ? (
+      {filteredBlogs.length === 0 ? (
         <div className="text-center py-12 text-gray-500">{t.noBlogs}</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
