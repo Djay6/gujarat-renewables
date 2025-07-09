@@ -13,6 +13,8 @@ const nextConfig = {
   },
   experimental: {
     optimizeCss: true,
+    // Add support for specific attributes added by browser extensions
+    largePageDataBytes: 128 * 1000, // Increase the limit for large pages
   },
   compress: true,
   poweredByHeader: false,
@@ -48,11 +50,13 @@ const nextConfig = {
     },
   ],
   reactStrictMode: true,
-  // This suppresses the warnings about extra attributes
+  // Updated configuration to suppress Grammarly extension attributes
   compiler: {
-    // Suppress the "Extra attributes from the server" warning
+    // Suppress the "Extra attributes from the server" warning for Grammarly extension attributes
     reactRemoveProperties: { properties: ['^data-new-gr-c-s-check-loaded$', '^data-gr-ext-installed$'] }
-  }
+  },
+  // Configure how Next.js handles HTML during hydration
+  swcMinify: true,
 };
 
 module.exports = nextConfig; 
