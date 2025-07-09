@@ -14,20 +14,53 @@ const FALLBACK_CONFIG = {
   appId: "1:582418360010:web:7b5355f08677c035f37633"
 };
 
+// Define types for our test results
+interface EnvCheckResults {
+  NODE_ENV: string | undefined;
+  hasProjectId: boolean;
+  projectIdValue: string;
+  hasApiKey: boolean;
+  hasAuthDomain: boolean;
+}
+
+interface InitCheckResults {
+  configUsed: {
+    projectId: string;
+    usingFallback: boolean;
+  };
+  initStatus?: string;
+  success?: boolean;
+}
+
+interface FirestoreCheckResults {
+  success?: boolean;
+  docsFound?: number;
+  empty?: boolean;
+  sampleDocId?: string;
+  sampleDocFields?: string[];
+  error?: string;
+  errorCode?: string;
+}
+
+interface TestResult {
+  test: string;
+  results: EnvCheckResults | InitCheckResults | FirestoreCheckResults;
+}
+
 export default function CheckFirebaseConfigPage() {
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<TestResult[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const runTests = async () => {
-      const testResults = [];
+      const testResults: TestResult[] = [];
       setIsLoading(true);
       setError(null);
 
       try {
         // 1. Check environment variables
-        const envCheck = {
+        const envCheck: TestResult = {
           test: 'Environment Variables Check',
           results: {
             NODE_ENV: process.env.NODE_ENV,
@@ -35,7 +68,7 @@ export default function CheckFirebaseConfigPage() {
             projectIdValue: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || '(not set)',
             hasApiKey: !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
             hasAuthDomain: !!process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-          }
+          } as EnvCheckResults
         };
         testResults.push(envCheck);
 
@@ -49,53 +82,53 @@ export default function CheckFirebaseConfigPage() {
           appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || FALLBACK_CONFIG.appId
         };
 
-        const initCheck = {
+        const initCheck: TestResult = {
           test: 'Firebase Initialization Check',
           results: {
             configUsed: {
               projectId: firebaseConfig.projectId,
               usingFallback: !process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
             }
-          }
+          } as InitCheckResults
         };
         
         // Try to initialize Firebase
         let app;
         if (!getApps().length) {
           app = initializeApp(firebaseConfig);
-          initCheck.results.initStatus = 'New app initialized';
+          (initCheck.results as InitCheckResults).initStatus = 'New app initialized';
         } else {
           app = getApps()[0];
-          initCheck.results.initStatus = 'Using existing app';
+          (initCheck.results as InitCheckResults).initStatus = 'Using existing app';
         }
         
-        initCheck.results.success = true;
+        (initCheck.results as InitCheckResults).success = true;
         testResults.push(initCheck);
 
         // 3. Try to fetch data from Firestore
         const db = getFirestore(app);
-        const firestoreCheck = {
+        const firestoreCheck: TestResult = {
           test: 'Firestore Connection Check',
-          results: {}
+          results: {} as FirestoreCheckResults
         };
 
         try {
           const q = query(collection(db, 'blogs'), limit(1));
           const snapshot = await getDocs(q);
           
-          firestoreCheck.results.success = true;
-          firestoreCheck.results.docsFound = snapshot.size;
-          firestoreCheck.results.empty = snapshot.empty;
+          (firestoreCheck.results as FirestoreCheckResults).success = true;
+          (firestoreCheck.results as FirestoreCheckResults).docsFound = snapshot.size;
+          (firestoreCheck.results as FirestoreCheckResults).empty = snapshot.empty;
           
           if (!snapshot.empty) {
             const doc = snapshot.docs[0];
-            firestoreCheck.results.sampleDocId = doc.id;
-            firestoreCheck.results.sampleDocFields = Object.keys(doc.data());
+            (firestoreCheck.results as FirestoreCheckResults).sampleDocId = doc.id;
+            (firestoreCheck.results as FirestoreCheckResults).sampleDocFields = Object.keys(doc.data());
           }
         } catch (firestoreError: any) {
-          firestoreCheck.results.success = false;
-          firestoreCheck.results.error = firestoreError.message;
-          firestoreCheck.results.errorCode = firestoreError.code;
+          (firestoreCheck.results as FirestoreCheckResults).success = false;
+          (firestoreCheck.results as FirestoreCheckResults).error = firestoreError.message;
+          (firestoreCheck.results as FirestoreCheckResults).errorCode = firestoreError.code;
         }
         
         testResults.push(firestoreCheck);
