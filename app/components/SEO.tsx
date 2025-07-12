@@ -22,7 +22,7 @@ export default function SEO({
   language = 'en',
 }: SEOProps) {
   const pathname = usePathname();
-  const canonicalUrl = `https://gujaratrenewables.in${pathname}`;
+  const canonicalUrl = `https://www.gujaratrenewables.in${pathname}`;
   
   // In App Router, we should use next/head with useEffect to avoid hydration mismatches
   useEffect(() => {

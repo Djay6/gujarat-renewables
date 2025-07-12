@@ -22,7 +22,7 @@ export function generateMetadata({
   pathname = '',
   openGraphImage = '/og-image.svg',
   noIndex = false,
-  metadataBaseUrl = 'https://gujaratrenewables.in',
+  metadataBaseUrl = 'https://www.gujaratrenewables.in',
 }: GenerateMetadataProps): Metadata {
   
   const url = `${metadataBaseUrl}${pathname}`;

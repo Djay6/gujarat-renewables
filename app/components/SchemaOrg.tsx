@@ -16,11 +16,11 @@ interface SchemaOrgProps {
 const SchemaOrg: React.FC<SchemaOrgProps> = ({
   title = 'Gujarat Renewables | Solar & Renewable Energy Land Aggregator in Gujarat',
   description = 'Gujarat Renewables provides premium land acquisition and leasing services for solar and renewable energy projects in Gujarat. Lease or sell your land for solar and renewable energy projects.',
-  imageUrl = 'https://gujaratrenewables.in/og-image.svg',
+  imageUrl = 'https://www.gujaratrenewables.in/og-image.svg',
   datePublished = '2023-01-01T00:00:00.000Z', // Use static date as default
   dateModified = '2023-01-01T00:00:00.000Z', // Use static date as default
   organizationName = 'Gujarat Renewables',
-  siteUrl = 'https://gujaratrenewables.in'
+  siteUrl = 'https://www.gujaratrenewables.in'
 }) => {
   const pathname = usePathname();
   const url = `${siteUrl}${pathname}`;

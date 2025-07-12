@@ -5,7 +5,7 @@ import { db } from './firebase';
 type ChangeFrequency = 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://gujaratrenewables.in';
+  const baseUrl = 'https://www.gujaratrenewables.in';
   
   // Common pages 
   const staticPages = [
