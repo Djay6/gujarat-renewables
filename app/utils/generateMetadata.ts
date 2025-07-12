@@ -4,7 +4,7 @@ type GenerateMetadataProps = {
   title?: string;
   description?: string;
   keywords?: string;
-  locale?: 'gu_IN' | 'en_US';
+  locale?: 'gu_IN' | 'en_US' | 'en_IN';
   pathname?: string;
   openGraphImage?: string;
   noIndex?: boolean;
@@ -15,14 +15,14 @@ type GenerateMetadataProps = {
  * Generate consistent metadata for any page in the application
  */
 export function generateMetadata({
-  title = 'ગુજરાત રિન્યુએબલ્સ | સોલાર લેન્ડ એગ્રિગેટર',
-  description = 'ગુજરાતમાં સોલાર પ્રોજેક્ટ્સ માટે તમારી જમીન ભાડે આપો અથવા વેચો. સોલાર પ્રોજેક્ટ્સ માટે અમે જમીન સંપાદન અને લીઝ સેવાઓ પ્રદાન કરીએ છીએ.',
-  keywords = 'solar land Gujarat, solar land aggregator, solar farm land Gujarat, sell land for solar Gujarat, lease land for solar projects, ગુજરાતમાં સોલાર પ્રોજેક્ટ્સ, solar land investment Gujarat',
-  locale = 'gu_IN',
+  title = 'Gujarat Renewables | Solar & Renewable Energy Land Aggregator in Gujarat',
+  description = 'Gujarat Renewables provides premium land acquisition and leasing services for solar and renewable energy projects in Gujarat. Lease or sell your land for solar and renewable energy projects with the leading land aggregator in Gujarat.',
+  keywords = 'solar land Gujarat, solar land aggregator, renewable land aggregator, renewable energy Gujarat, solar farm land Gujarat, sell land for solar Gujarat, lease land for solar projects, solar project land, solar land investment Gujarat, gujarat renewable energy, solar land acquisition, solar energy land Gujarat, land for renewable projects, Kutch solar land, Banaskantha solar land, Patan solar land, North Gujarat solar land, Saurashtra solar land, Central Gujarat solar land, South Gujarat renewable land, agricultural land for solar Gujarat, barren land for solar projects, unused land for renewable energy, wasteland for solar development, non-agricultural land for solar Gujarat, industrial land for solar projects, land aggregation for solar developers, land pooling for renewable projects, long-term land lease for solar, land purchase for renewable energy, land valuation for solar projects, land due diligence for solar farms, minimum land size for solar project Gujarat, land requirements for 1MW solar plant, solar farm land specifications, ideal land for solar installation, solar land site selection criteria, land survey for renewable projects, landowner benefits from solar leasing, passive income from solar land, land monetization through renewables, land value appreciation with solar, guaranteed land rent from solar projects',
+  locale = 'en_IN',
   pathname = '',
   openGraphImage = '/og-image.svg',
   noIndex = false,
-  metadataBaseUrl = 'https://gujaratrenewables.com',
+  metadataBaseUrl = 'https://gujaratrenewables.in',
 }: GenerateMetadataProps): Metadata {
   
   const url = `${metadataBaseUrl}${pathname}`;
@@ -52,10 +52,10 @@ export function generateMetadata({
       url,
       title,
       description,
-      siteName: 'ગુજરાત રિન્યુએબલ્સ',
+      siteName: 'Gujarat Renewables',
       images: [
         {
-          url: `${openGraphImage}`,
+          url: openGraphImage.startsWith('http') ? openGraphImage : `${metadataBaseUrl}${openGraphImage}`,
           width: 1200,
           height: 630,
           alt: title,
@@ -66,7 +66,7 @@ export function generateMetadata({
       card: 'summary_large_image',
       title,
       description,
-      images: [openGraphImage],
+      images: [openGraphImage.startsWith('http') ? openGraphImage : `${metadataBaseUrl}${openGraphImage}`],
     },
     verification: {
       google: 'google-site-verification-code',

@@ -11,7 +11,12 @@ export interface Blog {
   updatedAt: Date;
   isPublished: boolean;
   tags: string[];
-  language: 'en' | 'gu'; // English or Gujarati
+  language?: string; // Default is English
+  // SEO fields
+  metaTitle?: string;
+  metaDescription?: string;
+  canonicalUrl?: string;
+  focusKeyword?: string;
 }
 
 export interface BlogFormData {
@@ -22,6 +27,11 @@ export interface BlogFormData {
   coverImage: string;
   author: string;
   tags: string;
-  language: 'en' | 'gu';
+  language?: string;
   isPublished: boolean;
+  // SEO fields
+  metaTitle?: string;
+  metaDescription?: string;
+  canonicalUrl?: string;
+  focusKeyword?: string;
 } 

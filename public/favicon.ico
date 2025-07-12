@@ -1,1 +1,4 @@
- 
+This is a placeholder for the binary favicon.ico file.
+
+In a real production environment, you should convert the SVG to ICO format using a proper conversion tool.
+You can use the script we created at scripts/generate-favicon.js or use an online converter. 

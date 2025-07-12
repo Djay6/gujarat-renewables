@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: ['/admin/', '/private/', '/*.json$'],
     },
-    sitemap: 'https://gujaratrenewables.com/sitemap.xml',
+    sitemap: 'https://gujaratrenewables.in/sitemap.xml',
   };
 } 

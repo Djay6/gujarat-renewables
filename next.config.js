@@ -5,7 +5,7 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'gujaratrenewables.com',
+        hostname: 'gujaratrenewables.in',
       },
     ],
     dangerouslyAllowSVG: true,

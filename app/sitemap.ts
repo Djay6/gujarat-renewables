@@ -1,64 +1,51 @@
 import { MetadataRoute } from 'next';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from './firebase';
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://gujaratrenewables.com';
+type ChangeFrequency = 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never';
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const baseUrl = 'https://gujaratrenewables.in';
   
   // Common pages 
-  const commonRoutes = [
+  const staticPages = [
     {
       url: baseUrl,
       lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
+      changeFrequency: 'monthly' as ChangeFrequency,
       priority: 1.0,
-    }
-  ];
-  
-  // Generate district-specific pages for SEO
-  const districts = [
-    'ahmedabad',
-    'kutch',
-    'banaskantha',
-    'patan',
-    'mehsana',
-    'surendranagar',
-    'rajkot',
-    'jamnagar',
-    'bhavnagar',
-    'amreli'
-  ];
-  
-  const districtRoutes = districts.map(district => ({
-    url: `${baseUrl}/districts/${district}`,
-    lastModified: new Date(),
-    changeFrequency: 'monthly' as const,
-    priority: 0.8,
-  }));
-  
-  // Generate service pages
-  const serviceRoutes = [
-    {
-      url: `${baseUrl}/services/land-leasing`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.7,
     },
-    {
-      url: `${baseUrl}/services/land-selling`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.7,
-    }
-  ];
-  
-  // Blog posts (future implementation)
-  const blogRoutes = [
     {
       url: `${baseUrl}/blog`,
       lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.6,
-    }
+      changeFrequency: 'weekly' as ChangeFrequency,
+      priority: 0.8,
+    },
   ];
-  
-  return [...commonRoutes, ...districtRoutes, ...serviceRoutes, ...blogRoutes];
+
+  // Fetch blog posts for the sitemap
+  try {
+    const blogQuery = query(
+      collection(db, 'blogs'),
+      where('isPublished', '==', true)
+    );
+    
+    const blogSnapshot = await getDocs(blogQuery);
+    
+    const blogPages = blogSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        url: `${baseUrl}/blog/${data.slug}`,
+        lastModified: data.updatedAt?.toDate() || data.publishedAt?.toDate() || new Date(),
+        changeFrequency: 'monthly' as ChangeFrequency,
+        priority: 0.7,
+      };
+    });
+    
+    return [...staticPages, ...blogPages];
+  } catch (error) {
+    console.error('Error generating sitemap for blog posts:', error);
+    // Return static pages if blog fetching fails
+    return staticPages;
+  }
 } 
