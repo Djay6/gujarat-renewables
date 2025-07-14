@@ -42,7 +42,8 @@ export const metadata: Metadata = {
       { url: '/favicon.svg', type: 'image/svg+xml' }
     ],
     shortcut: '/favicon.svg',
-    apple: '/favicon.svg',
+    apple: '/apple-touch-icon.png',
+    // apple: '/favicon.svg',
   },
 };
 
@@ -53,12 +54,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={hindVadodara.variable} suppressHydrationWarning>
-      <head>
+      {/* <head>
         <link rel="canonical" href="https://www.gujaratrenewables.in" />
         <link rel="icon" href="/favicon.ico" sizes="32x32" />
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/favicon.svg" />
-      </head>
+      </head> */}
       <body className={`font-sans ${hindVadodara.className} overflow-x-hidden bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800`} suppressHydrationWarning>
         <LanguageProvider>
           <Navigation />
